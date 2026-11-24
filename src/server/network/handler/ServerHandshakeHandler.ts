@@ -88,7 +88,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
         if (this.isInvalid(HandshakeState.VERIFY)) return;
 
         const sessionId = packet.sessionId;
-        if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 128) {
+        if (!Number.isSafeInteger(sessionId) || sessionId < 1 || sessionId > 254) {
             this.disconnect(ServerHandshakeHandler.INVALID_SESSION_ID);
             return;
         }

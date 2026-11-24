@@ -42,7 +42,7 @@ export class ClientChannel implements Channel {
         writer.writeInt8(PacketHeader.C2S);
         writer.writeInt8(this.getSid());
         this.out.codec.encode(writer, payload);
-        this.bus.sendBuffer(writer.toUint8Array());
+        this.bus.sendFrame(writer.toUint8Array());
     }
 
     public feed(reader: BinaryReader) {

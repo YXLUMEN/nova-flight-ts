@@ -14,9 +14,10 @@ pub(crate) const SERVER_ACTION: u8 = 0xFF;
 /// 中继控制命令
 pub(crate) const KICK: u8 = 0x00;
 pub(crate) const PERMIT: u8 = 0x01;
-pub(crate) const QUERY: u8 = 0x02;
-pub(crate) const BAN_IP: u8 = 0x03;
-pub(crate) const UNBAN_IP: u8 = 0x04;
+pub(crate) const REJECT: u8 = 0x02;
+pub(crate) const QUERY: u8 = 0x03;
+pub(crate) const BAN_IP: u8 = 0x04;
+pub(crate) const UNBAN_IP: u8 = 0x05;
 
 /// 中继回执,用于可翻译文本
 pub(crate) const DUPLICATE_SERVER: u8 = 0x00;
@@ -33,4 +34,5 @@ pub(crate) const BANED: u8 = 0x08;
 pub(crate) const UNBAN: u8 = 0x09;
 pub(crate) const DID_NOT_BANED: u8 = 0x10;
 pub(crate) const INVALID_IPV4: u8 = 0x11;
+pub(crate) const INVALID_TOKEN: u8 = 0x12;
 pub(crate) const UNKNOWN_ACTION: u8 = 0xFF;

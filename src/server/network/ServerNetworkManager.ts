@@ -79,14 +79,14 @@ export class ServerNetworkManager implements SessionDispatcher {
             payload = HandshakeProtocols.CLIENT_BOUND.codec.decode(reader);
         } catch (err) {
             Log.warn(`Error occurrence when open a channel:\n  ${err}`);
-            this.reject(sid);
+            this.kick(sid);
             return;
         }
 
         if (payload instanceof ClientHandshakeC2SPacket) {
             const addr = this.isIntegrated ? SocketAddr.INTEGRATED : this.bindAddress.get(sid);
             if (!addr) {
-                this.reject(sid);
+                this.kick(sid);
                 return;
             }
 
@@ -105,31 +105,24 @@ export class ServerNetworkManager implements SessionDispatcher {
         }
 
         // 连接悬挂
-        this.reject(sid);
+        this.kick(sid);
     }
 
     public relay(reader: BinaryReader): void {
         this.relayHandler.onMessage(reader);
     }
 
-    public permit(sid: number, addr: string): void {
+    public permit(token: number, host: string): void {
+        if (this.health.tooFrequent(host)) {
+            this.bus.action(RelayActionBuilder.reject(token));
+            return;
+        }
+        this.bus.action(RelayActionBuilder.permit(token));
+    }
+
+    public active(sid: number, socket: SocketAddr) {
         this.expired(sid);
-        const socket = SocketAddr.from(addr);
-        if (!socket) {
-            // 中继返回的地址理论上不会出现无法解析的问题
-            Log.warn(`Can not parse address: "${addr}"`);
-            this.bus.action(RelayActionBuilder.forceDisconnect(sid));
-            return;
-        }
-
-        if (this.health.tooFrequent(socket.host)) {
-            this.bus.action(RelayActionBuilder.forceDisconnect(sid));
-            return;
-        }
-
-        // 保存中继确认的地址,以便后续注册时使用
         this.bindAddress.set(sid, socket);
-        this.bus.action(RelayActionBuilder.allowTraffic(sid));
     }
 
     public detach(sid: number): void {
@@ -137,7 +130,7 @@ export class ServerNetworkManager implements SessionDispatcher {
         this.bindAddress.delete(sid);
     }
 
-    private reject(sid: number) {
+    private kick(sid: number) {
         this.bindAddress.delete(sid);
         this.bus.action(RelayActionBuilder.forceDisconnect(sid));
     }

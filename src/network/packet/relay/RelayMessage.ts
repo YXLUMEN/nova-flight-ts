@@ -6,7 +6,6 @@ import type {ServerRelayHandler} from "../../../server/network/handler/ServerRel
 import type {ClientCommonHandler} from "../../../client/network/handler/ClientCommonHandler.ts";
 
 export class RelayMessage implements RelayPayload {
-    public static readonly TYPE_ID = 0x03;
     public static readonly ID: PayloadType<RelayMessage> = payloadType('relay_msg');
     public static readonly CODEC: PacketCodec<RelayMessage> = PacketCodecs.adapt2(
         PacketCodecs.UINT8,

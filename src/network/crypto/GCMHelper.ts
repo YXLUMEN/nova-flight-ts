@@ -46,3 +46,10 @@ export function unwrapKey(
 export function randomIv() {
     return crypto.getRandomValues(new Uint8Array(GCM_NONCE_BYTES));
 }
+
+export function exportECDHTpPEM(raw: ArrayBuffer) {
+    const base64String = new Uint8Array(raw).toBase64({alphabet: 'base64url'});
+    const matches = base64String.match(/.{1,64}/g);
+    const pemLines = matches === null ? base64String : matches.join('\n');
+    return `-----BEGIN PUBLIC KEY-----\n${pemLines}\n-----END PUBLIC KEY-----\n`;
+}

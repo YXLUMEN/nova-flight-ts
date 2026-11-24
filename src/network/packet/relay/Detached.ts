@@ -5,7 +5,6 @@ import type {RelayPayload} from "../../RelayPayload.ts";
 import type {ServerRelayHandler} from "../../../server/network/handler/ServerRelayHandler.ts";
 
 export class Detached implements RelayPayload {
-    public static readonly TYPE_ID = 0x00;
     public static readonly ID: PayloadType<Detached> = payloadType('detached');
     public static readonly CODEC: PacketCodec<Detached> = PacketCodecs.adapt(
         PacketCodecs.UINT8,

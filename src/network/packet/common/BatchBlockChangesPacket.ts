@@ -45,9 +45,10 @@ export class BatchBlockChangesPacket implements Payload {
         const ys = new Uint32Array(buffer, len + padding + xsSize, len);
 
         for (let i = 0; i < len; i++) {
-            types[i] = changes[i].type;
-            xs[i] = changes[i].x;
-            ys[i] = changes[i].y;
+            const change = changes[i];
+            types[i] = change.type;
+            xs[i] = change.x;
+            ys[i] = change.y;
         }
 
         return new BatchBlockChangesPacket(types, xs, ys);
@@ -114,8 +115,9 @@ export class BatchBlockChangesPacket implements Payload {
     }
 
     public foreach(consumer: (type: number, x: number, y: number) => void) {
-        for (let i = 0; i < this.types.length; i++) {
-            consumer(this.types[i], this.xs[i], this.ys[i]);
+        const {types, xs, ys} = this;
+        for (let i = 0; i < types.length; i++) {
+            consumer(types[i], xs[i], ys[i]);
         }
     }
 

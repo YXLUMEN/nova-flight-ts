@@ -4,25 +4,28 @@ use crate::network::infrastructure::errors::RegisterError;
 use crate::network::infrastructure::header::*;
 use crate::network::infrastructure::net::{send_code, send_timeout};
 use crate::network::infrastructure::protocol::*;
-use crate::network::infrastructure::session::{NEXT_SESSION_ID, Session, SessionContext};
-use crate::network::infrastructure::states::{RelayState, Role, ServerManager, Tx};
+use crate::network::infrastructure::relay::{PendingClient, RelayManager, RelayState};
+use crate::network::infrastructure::session::{PendingSession, RoleContext, Session, Tx};
+use crate::network::infrastructure::session_alloc::SessionAllocator;
 use crate::network::infrastructure::util::{constant_time_eq, format_uuid, is_nil_uuid};
 use crate::network::server::{ServerContext, server_relay};
 use dashmap::Entry;
 use futures_util::stream::SplitStream;
 use futures_util::{SinkExt, StreamExt};
-use log::{debug, error, info, log};
-use std::net::SocketAddr;
-use std::sync::Arc;
+use log::{debug, error, info, log, warn};
+use std::net::{SocketAddr, SocketAddrV4};
 use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, LazyLock};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{Mutex, OnceCell, mpsc, oneshot};
 use tokio::time::{Duration, timeout};
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 use tokio_tungstenite::{WebSocketStream, accept_async};
 
-pub(crate) static SERVER_MANAGER: OnceCell<Mutex<ServerManager>> = OnceCell::const_new();
-pub(crate) static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new_with(AtomicBool::new(false));
+pub(crate) static SERVER_MANAGER: OnceCell<Mutex<RelayManager>> = OnceCell::const_new();
+pub(crate) static OPEN_FLAG: OnceCell<AtomicBool> =
+    OnceCell::const_new_with(AtomicBool::new(false));
+static NEXT_SESSION_ID: LazyLock<SessionAllocator> = LazyLock::new(|| SessionAllocator::new());
 
 pub async fn run_ws_server(
     listener: TcpListener,
@@ -45,10 +48,10 @@ pub async fn run_ws_server(
                         consecutive_errors = 0;
                         backoff = Duration::from_millis(100);
 
-                        if !address.is_ipv4() {
+                        let SocketAddr::V4(addrv4) = address else {
                             debug!("Only support Ipv4 {}", address);
                             continue;
-                        }
+                        };
 
                         let is_local = address.ip().is_loopback();
                         if !is_open() && !is_local {
@@ -62,13 +65,20 @@ pub async fn run_ws_server(
                             continue;
                         }
 
-                        if state.size() >= MAX_CONNECTIONS {
-                            debug!("Connection limit reached ({}), rejecting {}", MAX_CONNECTIONS, address);
+                        // the max value sid can be, u8::MAX - 1
+                        if state.pending_len() >= MAX_CONNECTION as usize {
+                            debug!("Session limit reached ({}), rejecting {}", MAX_CONNECTION, address);
+                            continue;
+                        }
+
+                        // activate connection
+                        if state.active_len() >= MAX_SESSION as usize {
+                            debug!("Connection limit reached ({}), rejecting {}", MAX_SESSION, address);
                             continue;
                         }
 
                         let state = state.clone();
-                        tokio::spawn(async move { handle_connection(stream, address, state).await; });
+                        tokio::spawn(async move { handle_connection(stream, addrv4, state).await; });
                     }
                     Err(e) => {
                         error!("Accept error: {}", e);
@@ -85,10 +95,16 @@ pub async fn run_ws_server(
         }}
     }
 
-    // 兜底清理
-    state.clear_server().await;
-    state.clear_clients();
-    state.unban_all().await;
+    if let Err(_) = timeout(Duration::from_secs(8), async {
+        state.clear_server().await;
+        state.clear_clients();
+        state.unban_all().await;
+    })
+    .await
+    {
+        error!("Waiting cleaning timeout");
+    };
+
     drop(state);
     info!("Relay server shutdown");
 
@@ -99,7 +115,7 @@ pub async fn run_ws_server(
     }
 }
 
-async fn handle_connection(stream: TcpStream, address: SocketAddr, state: Arc<RelayState>) {
+async fn handle_connection(stream: TcpStream, address: SocketAddrV4, state: Arc<RelayState>) {
     if state.is_shutdown() {
         debug!("Rejecting new connection: server shutting down");
         return;
@@ -113,11 +129,11 @@ async fn handle_connection(stream: TcpStream, address: SocketAddr, state: Arc<Re
         }
     };
 
-    // ws + 消息管道
+    // ws + mpsc
     let (mut writer, mut reader) = ws_stream.split();
     let (tx, mut rx) = mpsc::channel::<Bytes>(256);
 
-    // 向此连接发送
+    // send to this connection
     let send_task = tokio::spawn(async move {
         while let Some(msg) = rx.recv().await {
             let Err(e) = writer.send(Message::Binary(msg)).await else {
@@ -126,14 +142,14 @@ async fn handle_connection(stream: TcpStream, address: SocketAddr, state: Arc<Re
             error!("ws write failed. cause by\n {}", e);
             break;
         }
-        // ws关闭,超时等待
+        // shut ws
         let _ = timeout(Duration::from_secs(2), writer.close()).await;
         drop(rx);
     });
 
     debug!("Start to registry for \"{}\"", &address);
 
-    let ctx = match attach_session(&state, tx, &mut reader, &address).await {
+    let role = match attach_session(&state, tx, &mut reader, &address).await {
         Ok(s) => s,
         Err(e) => {
             log!(e.level(), "Registration failed from {}: {}", &address, e);
@@ -141,21 +157,22 @@ async fn handle_connection(stream: TcpStream, address: SocketAddr, state: Arc<Re
         }
     };
 
-    // 向对端发送
-    let session = ctx.session.clone();
-    match session.role {
-        Role::Client => play_client(&state, ctx, reader).await,
-        Role::Server => play_server(&state, &session, reader).await,
-    }
+    // send to opposite
+    // return 0 mean alloc fail, deallocate noop
+    let sid_option = match role {
+        RoleContext::Server(session) => play_server(&state, &session, reader).await,
+        RoleContext::Client(session) => play_client(&state, session, &address, reader).await,
+    };
 
     debug!(
-        "\"{:?}\" side connection closed with sid {}",
-        session.role, session.session_id
+        "left \"{}\" active, pending \"{}\"",
+        state.active_len(),
+        state.pending_len()
     );
-    debug!("Left {} connections", state.size());
 
-    NEXT_SESSION_ID.deallocate(session.session_id).await;
-    drop(session);
+    if let Some(sid) = sid_option {
+        NEXT_SESSION_ID.deallocate(sid).await;
+    }
     if let Err(e) = send_task.await {
         info!("Send task panicked: {}", e);
     }
@@ -165,8 +182,9 @@ async fn attach_session(
     state: &RelayState,
     tx: Tx,
     reader: &mut SplitStream<WebSocketStream<TcpStream>>,
-    addr: &SocketAddr,
-) -> Result<SessionContext, RegisterError> {
+    addr: &SocketAddrV4,
+) -> Result<RoleContext, RegisterError> {
+    // wait first message
     let msg = timeout(Duration::from_secs(5), reader.next())
         .await
         .map_err(|_| RegisterError::Timeout)?;
@@ -192,8 +210,7 @@ async fn attach_server(
     state: &RelayState,
     tx: Tx,
     incoming: Bytes,
-) -> Result<SessionContext, RegisterError> {
-    // 注册服务端
+) -> Result<RoleContext, RegisterError> {
     if incoming.len() != 33 {
         return Err(RegisterError::InvalidPacket);
     }
@@ -206,7 +223,7 @@ async fn attach_server(
 
     let provided_secret = &incoming[1..33];
 
-    // 密钥校验
+    // check secret
     let state_cell = SERVER_MANAGER
         .get()
         .ok_or(RegisterError::Internal("Server manager not initialized"))?;
@@ -218,7 +235,7 @@ async fn attach_server(
         .ok_or(RegisterError::Internal("No server handle"))?;
 
     if !constant_time_eq(provided_secret, expected_secret) {
-        // 密钥错误同样返回"服务端已存在"
+        // also feedback duplicate server
         send_code(&tx, DUPLICATE_SERVER);
         return Err(RegisterError::SecretMismatch);
     }
@@ -228,38 +245,31 @@ async fn attach_server(
         .await
         .ok_or(RegisterError::Internal("No session id allocated"))?;
 
-    let session = Session::new_server(tx, session_id);
+    let session = Session::new(tx, session_id);
     if let Err(e) = state.register_server(session.clone()).await {
         NEXT_SESSION_ID.deallocate(session_id).await;
         return Err(RegisterError::Internal(e));
     }
 
-    // 销毁密钥
+    // destroy key
     let handle = guard
         .handle
         .as_mut()
         .ok_or(RegisterError::Internal("No server handle"))?;
     handle.secret.fill(0);
 
-    let packet = Attached {
-        session_id: session.session_id,
-    };
+    let packet = Attached { sid: session.sid };
     send_timeout(&session.tx, packet, Duration::from_secs(2)).await;
     info!("Server registered with id {}", session_id);
-    Ok(SessionContext {
-        session,
-        allow: None,
-        close: None,
-    })
+    Ok(RoleContext::Server(session))
 }
 
 async fn attach_client(
     state: &RelayState,
     tx: Tx,
-    addr: &SocketAddr,
+    addr: &SocketAddrV4,
     incoming: Bytes,
-) -> Result<SessionContext, RegisterError> {
-    // 注册 Client
+) -> Result<RoleContext, RegisterError> {
     if incoming.len() != 17 {
         send_code(&tx, INVALID_REGISTER_PACKET);
         return Err(RegisterError::InvalidPacket);
@@ -274,33 +284,25 @@ async fn attach_client(
         return Err(RegisterError::UuidNil);
     }
 
-    // UUID重复检查
-    match state.register_client(uuid) {
+    let token = state.next_token();
+    match state.open(token) {
         Entry::Occupied(_) => {
             send_code(&tx, DUPLICATE_PLAYER);
             Err(RegisterError::DuplicateClient)
         }
         Entry::Vacant(v) => {
-            let session_id = NEXT_SESSION_ID
-                .allocate()
-                .await
-                .ok_or(RegisterError::Internal("No session id allocated"))?;
-
-            v.insert(session_id);
-
             let (permit_tx, permit_rx) = oneshot::channel::<()>();
-            let (c_tx, c_rx) = oneshot::channel::<()>();
-            let session = Session::new_client(tx, session_id, uuid);
+            let (close_tx, close_rx) = oneshot::channel::<()>();
+            let pending = PendingClient::new(tx, permit_tx, close_tx);
+            v.insert(pending);
 
-            state.insert_client_entry(session_id, session.clone(), permit_tx, c_tx);
-
-            // 向服务端发送注册消息
+            // notice the server
             if let Some(server) = state.get_server().await {
-                let packet = ClientAttached {
-                    session_id: session.session_id,
-                    addr: &addr.to_string(),
+                let attached = ClientAttached {
+                    token,
+                    host: &addr.ip(),
                 };
-                send_timeout(&server.tx, packet, Duration::from_secs(2)).await;
+                send_timeout(&server.tx, attached, Duration::from_secs(2)).await;
             }
 
             debug!(
@@ -308,11 +310,12 @@ async fn attach_client(
                 format_uuid(&uuid),
                 &addr
             );
-            Ok(SessionContext {
-                session,
-                allow: Some(permit_rx),
-                close: Some(c_rx),
-            })
+
+            Ok(RoleContext::Client(PendingSession {
+                token,
+                allow: permit_rx,
+                close: close_rx,
+            }))
         }
     }
 }
@@ -321,7 +324,7 @@ async fn play_server(
     state: &RelayState,
     session: &Arc<Session>,
     reader: SplitStream<WebSocketStream<TcpStream>>,
-) {
+) -> Option<u8> {
     server_relay(ServerContext {
         state,
         session,
@@ -329,7 +332,7 @@ async fn play_server(
     })
     .await;
 
-    // 清理
+    // clean up
     if state
         .get_server()
         .await
@@ -338,55 +341,76 @@ async fn play_server(
         .unwrap_or(false)
     {
         info!("Server disconnected");
-        for client in state.iter_clients() {
-            state.close(client.key());
-        }
+        // send close and remove all records
+        state.close_clients();
         state.clear_server().await;
     }
+
+    Some(session.sid)
 }
 
 async fn play_client(
     state: &RelayState,
-    ctx: SessionContext,
+    mut pending: PendingSession,
+    address: &SocketAddrV4,
     reader: SplitStream<WebSocketStream<TcpStream>>,
-) {
-    let session = &ctx.session;
-    let session_id = session.session_id;
+) -> Option<u8> {
+    use crate::network::infrastructure::session::Admission;
+    use tokio::time::sleep;
 
-    if let Some((allow_rx, mut close_rx)) = ctx.allow.zip(ctx.close) {
-        debug!("Client {} waiting release", session_id);
-        let is_allow = tokio::select! {
-            _ = allow_rx => true,
-            _ = &mut close_rx => false,
-            _ = tokio::time::sleep(Duration::from_secs(4)) => false,
-        };
-
-        debug!("Client {} released {}", session_id, is_allow);
-        if is_allow {
-            state.active_client(session_id, session.clone());
-
-            let packet = Attached { session_id };
-            send_timeout(&session.tx, packet, Duration::from_secs(2)).await;
-
-            client_relay(ClientContext {
-                state,
-                session,
-                reader,
-                close_rx,
-            })
-            .await;
-        }
-    }
-
-    // 清理
-    let Some(id) = state.remove_by_id(session_id) else {
-        debug!("Client disconnected with sid: {}", session_id);
-        return;
+    let token = pending.token;
+    let mut adm = Admission::take(state, token);
+    let allowed = tokio::select! {
+        _ = &mut pending.allow => true,
+        _ = &mut pending.close => false,
+        _ = sleep(Duration::from_secs(4)) => false,
     };
 
-    debug!("Client disconnected with uuid: {}", format_uuid(&id));
-    if let Some(server) = state.get_server().await {
-        let packet = Detached { session_id };
-        send_timeout(&server.tx, packet, Duration::from_secs(2)).await;
+    debug!("Client \"{}\" released {}", token, allowed);
+    if !allowed {
+        return None;
     }
+
+    let sid = NEXT_SESSION_ID.allocate().await?;
+    // server must exist
+    let Some(server) = state.get_server().await else {
+        return Some(sid);
+    };
+
+    // notice server before active session
+    // mustn't drop the active packet, because the relay has no means to remove that record, yet.
+    let active = ClientActive { sid, address };
+    let success = send_timeout(&server.tx, active, Duration::from_secs(2)).await;
+    if !success {
+        return Some(sid);
+    }
+
+    // try upgrade session
+    let session = match state.upgrade(sid, token) {
+        Ok(s) => s,
+        Err(e) => {
+            warn!("pending \"{}\" {}", token, e);
+            // only upgrade success will return session, so no need to clean active record.
+            // pending is already remove, shut receiver here.
+            pending.clean();
+            return Some(sid);
+        }
+    };
+    adm.settle();
+
+    // feed back client
+    let attached = Attached { sid };
+    send_timeout(&session.tx, attached, Duration::from_secs(2)).await;
+    client_relay(ClientContext {
+        state,
+        session: &*session,
+        reader,
+        close_rx: pending.close,
+    })
+    .await;
+
+    // remove record and notice, it's ok that loss this `Detached`
+    state.remove(sid);
+    send_timeout(&server.tx, Detached { sid }, Duration::from_secs(2)).await;
+    Some(sid)
 }

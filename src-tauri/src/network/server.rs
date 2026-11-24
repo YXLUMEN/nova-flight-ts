@@ -1,15 +1,13 @@
 use crate::network::infrastructure::header::*;
 use crate::network::infrastructure::net::*;
 use crate::network::infrastructure::protocol::{MAX_EXCLUDES, MAX_PAYLOAD_LEN, QueryClientsResult};
+use crate::network::infrastructure::relay::RelayState;
 use crate::network::infrastructure::session::Session;
-use crate::network::infrastructure::states::RelayState;
-use crate::network::infrastructure::util::{
-    format_uuid, parse_ipv4, parse_session_id, read_var_uint,
-};
+use crate::network::infrastructure::util::{parse_ipv4, parse_session_id, read_var_uint};
 use bytes::{BufMut, Bytes, BytesMut};
 use futures_util::StreamExt;
 use futures_util::stream::SplitStream;
-use log::{debug, error, warn};
+use log::{debug, error, info, warn};
 use std::time::Duration;
 use tokio::net::TcpStream;
 use tokio_tungstenite::WebSocketStream;
@@ -44,7 +42,7 @@ pub(crate) async fn server_relay(mut ctx: ServerContext<'_>) {
     }
 }
 
-async fn relay_server_message(state: &RelayState, session: &Session, payload: Bytes) {
+async fn relay_server_message(state: &RelayState, server: &Session, payload: Bytes) {
     if payload.is_empty() {
         debug!("Empty message received");
         return;
@@ -53,24 +51,14 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
     match payload[0] {
         SERVER_BROADCAST => {
             // [Header][SID][Data]
-            let mut to_close = Vec::new();
-            for entry in state.iter() {
-                let session = entry.value();
+            for mut entry in state.iter_mut() {
+                let client = entry.value_mut();
+                let session = &client.session;
                 if send_or_drop(&session.tx, &payload) {
                     continue;
                 }
-
-                if let Some(uuid) = session.uuid {
-                    warn!(
-                        "[Broadcast] Dropping unresponsive client \"{}\"",
-                        format_uuid(&uuid)
-                    );
-                }
-                to_close.push(*entry.key());
-            }
-
-            for id in to_close {
-                state.close(&id);
+                info!("[Broadcast] Dropping client \"{}\"", session.sid);
+                client.close();
             }
         }
         SERVER_SINGLE => {
@@ -81,14 +69,18 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             }
 
             // SessionId
-            let target_id = payload[1];
-            let Some(session) = state.by_id(&target_id) else {
+            let sid = payload[1];
+            let Some(mut client) = state.get_mut(sid) else {
                 return;
             };
+
+            let session = &client.session;
             if send_or_drop_move(&session.tx, payload) {
                 return;
             }
-            state.close(&target_id);
+
+            info!("[Broadcast] Dropping client \"{}\"", session.sid);
+            client.close();
         }
         SERVER_EXCLUDE => {
             // [Header][SID][TargetIds][Data]
@@ -109,7 +101,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             };
 
             if count > MAX_EXCLUDES {
-                send_code(&session.tx, EXCLUDE_TOO_MUCH);
+                send_code(&server.tx, EXCLUDE_TOO_MUCH);
                 warn!("InvalidPacket: Exclude list too large");
                 return;
             }
@@ -131,97 +123,101 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             buf.put_slice(rest_payload);
             let forwarded = buf.freeze();
 
-            let mut to_close = Vec::new();
-            for entry in state.iter() {
+            for mut entry in state.iter_mut() {
                 let id = *entry.key();
                 if excludes.iter().any(|ex| ex == &id) {
                     continue;
                 }
 
-                let session = entry.value();
+                let client = entry.value_mut();
+                let session = &client.session;
                 if send_or_drop(&session.tx, &forwarded) {
                     continue;
                 }
 
-                if let Some(uuid) = session.uuid {
-                    warn!(
-                        "[Excludes] Dropping unresponsive client \"{}\"",
-                        format_uuid(&uuid)
-                    );
-                }
-                to_close.push(id);
-            }
-
-            for id in to_close {
-                state.close(&id);
+                info!("[Excludes] Dropping client \"{}\"", session.sid);
+                client.close();
             }
         }
-        SERVER_ACTION => relay_actions(state, session, payload).await,
+        SERVER_ACTION => relay_actions(state, server, payload).await,
         _ => {}
     }
 }
 
-async fn relay_actions(state: &RelayState, session: &Session, payload: Bytes) -> () {
+async fn relay_actions(state: &RelayState, server: &Session, payload: Bytes) -> () {
     // 协议格式: [Header 0xff][Type 1][Data n]
     if payload.len() < 2 {
-        action_fail(&session.tx, INVALID_ACTION).await;
+        action_fail(&server.tx, INVALID_ACTION).await;
         return;
     }
 
     let data = &payload[2..];
     match payload[1] {
+        // kick active by its sid
         KICK => {
             if data.len() != 1 {
-                action_fail(&session.tx, EMPTY_SID).await;
+                action_fail(&server.tx, EMPTY_SID).await;
                 return;
             }
 
-            let session_id = data[0];
-            if let Some(session) = state.any_by_id(&session_id) {
-                send_code(&session.tx, KICKED);
-                state.close(&session_id);
+            if let Some(mut client) = state.get_mut(data[0]) {
+                send_code(&client.session.tx, KICKED);
+                client.close();
             }
         }
+        // allow pending client upgrade
         PERMIT => {
-            if data.len() != 1 {
-                action_fail(&session.tx, EMPTY_SID).await;
+            if data.len() != 4 {
+                action_fail(&server.tx, INVALID_TOKEN).await;
                 return;
             }
-            state.permit(&data[0]);
+            let b: &[u8] = &data[0..4];
+            let token = u32::from_le_bytes(b.try_into().unwrap());
+            state.permit(token);
+        }
+        // reject pending client
+        REJECT => {
+            if data.len() != 4 {
+                action_fail(&server.tx, INVALID_TOKEN).await;
+                return;
+            }
+            let b: &[u8] = &data[0..4];
+            let token = u32::from_le_bytes(b.try_into().unwrap());
+            state.reject(token);
         }
         QUERY => {
             // QueryClients: 查询当前所有在线客户端列表
-            // 回包格式: [0x00][0x04][count u8]([session_id u8][uuid 16B])*
-            let clients = state.collect_client_list();
+            // 回包格式: [0x00][0x04][count u8]([session_id u8])*
+            let clients = state.iter().map(|x| *x.key()).collect();
             let result = QueryClientsResult { clients };
-            send_timeout(&session.tx, result, Duration::from_secs(2)).await;
+            send_timeout(&server.tx, result, Duration::from_secs(2)).await;
         }
         BAN_IP => {
             let addr = parse_ipv4(data);
             let Some(ip) = addr else {
-                action_fail(&session.tx, INVALID_IPV4).await;
+                action_fail(&server.tx, INVALID_IPV4).await;
                 return;
             };
 
             state.ban(ip.into()).await;
-            send_message(&session.tx, BANED, &[&*ip.to_string()]);
+            send_message(&server.tx, BANED, &[&*ip.to_string()]);
         }
         UNBAN_IP => {
             let addr = parse_ipv4(data);
             let Some(ip) = addr else {
-                action_fail(&session.tx, INVALID_IPV4).await;
+                action_fail(&server.tx, INVALID_IPV4).await;
                 return;
             };
 
             if state.unban(&ip.into()).await {
-                send_message(&session.tx, UNBAN, &[&*ip.to_string()]);
+                send_message(&server.tx, UNBAN, &[&*ip.to_string()]);
             } else {
-                send_code(&session.tx, DID_NOT_BANED);
+                send_code(&server.tx, DID_NOT_BANED);
             }
         }
         _ => {
             warn!("Invalid action type: 0x{:02x}", payload[1]);
-            action_fail(&session.tx, UNKNOWN_ACTION).await;
+            action_fail(&server.tx, UNKNOWN_ACTION).await;
         }
     };
 }

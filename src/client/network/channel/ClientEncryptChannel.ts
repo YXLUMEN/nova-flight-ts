@@ -32,7 +32,7 @@ export class ClientEncryptChannel extends ClientChannel {
         const task = buildEncrypt(this.session, writer, PacketHeader.C2S, this.getSid());
         const next = this.sendTail.then(async () => {
             const buffer = await task;
-            if (this.bus.isConnected()) this.bus.sendBuffer(buffer);
+            if (this.bus.isConnected()) this.bus.sendFrame(buffer);
         });
         this.sendTail = next.catch(err => Log.error(err));
     }
@@ -55,7 +55,7 @@ export class ClientEncryptChannel extends ClientChannel {
         console.warn(`[Client] Unknown header: ${header}`);
     }
 
-    protected decrypt(reader: BinaryReader, session: GCMDecrypt) {
+    private decrypt(reader: BinaryReader, session: GCMDecrypt) {
         try {
             const nonce = reader.readSlice(GCM_NONCE_BYTES);
             const remain = reader.readSlice(reader.bytesRemaining());

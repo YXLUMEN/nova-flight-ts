@@ -1,19 +1,14 @@
 use crate::network::infrastructure::protocol::{Payload, RelayMessage};
-use crate::network::infrastructure::states::Tx;
+use crate::network::infrastructure::session::Tx;
 use bytes::Bytes;
-use log::{debug, error, warn};
+use log::{debug, warn};
 use std::time::Duration;
 use tokio::sync::mpsc::error::TrySendError;
 
 /// 中继服务器发送
-pub(crate) async fn send_timeout<T: Payload>(tx: &Tx, payload: T, timeout: Duration) -> () {
+pub(crate) async fn send_timeout<T: Payload>(tx: &Tx, payload: T, timeout: Duration) -> bool {
     let buf = payload.to_bytes();
-    match tx.send_timeout(buf, timeout).await {
-        Ok(()) => {}
-        Err(e) => {
-            error!("Failed to send relay: {}", e);
-        }
-    }
+    tx.send_timeout(buf, timeout).await.is_ok()
 }
 
 pub(crate) fn try_send_packet<T: Payload>(tx: &Tx, payload: T) -> () {

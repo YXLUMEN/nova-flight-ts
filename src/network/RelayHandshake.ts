@@ -28,7 +28,7 @@ export class RelayHandshake {
             console.log(`[${this.side}] Successfully connected to "${this.ws.url}" at ${ISOTime()}`);
         };
         const connectFail = (reason: any) => {
-            this.ws?.close();
+            this.ws.close();
             clearTimeout(timeout);
             reject(reason);
         };
@@ -57,7 +57,7 @@ export class RelayHandshake {
 
         const reader = new BinaryReader(buf);
         reader.readUint8();
-        const payload = RelayProtocols.RELAY.codec.decode(reader);
+        const payload = RelayProtocols.SERVER.codec.decode(reader);
         if (payload instanceof Detached) {
             fail(`[${this.side}] Ticked by relay`);
             return;

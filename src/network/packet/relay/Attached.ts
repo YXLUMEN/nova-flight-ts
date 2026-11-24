@@ -4,7 +4,6 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {RelayPayload} from "../../RelayPayload.ts";
 
 export class Attached implements RelayPayload {
-    public static readonly TYPE_ID = 0x01;
     public static readonly ID: PayloadType<Attached> = payloadType('attached');
     public static readonly CODEC: PacketCodec<Attached> = PacketCodecs.adapt(
         PacketCodecs.UINT8,

@@ -12,7 +12,7 @@ export class Protocols {
     public static settle() {
         RelayCodeMap.init();
         this.VERSION = hashCode([
-            RelayProtocols.RELAY,
+            RelayProtocols.SERVER,
             HandshakeProtocols.SERVER_BOUND,
             HandshakeProtocols.CLIENT_BOUND,
             ConfigProtocols.SERVER_BOUND,

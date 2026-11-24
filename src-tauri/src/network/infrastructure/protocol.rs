@@ -1,10 +1,12 @@
 use bytes::{BufMut, Bytes, BytesMut};
+use std::net::{Ipv4Addr, SocketAddrV4};
 use std::time::Duration;
 
 pub(crate) const MAX_PAYLOAD_LEN: usize = 6176; // 6 KB upper bound for a single frame, with 32B pad
 pub(crate) const MAX_EXCLUDES: u32 = 16; // exclude uuid count
 pub(crate) const MAX_BACKOFF: Duration = Duration::from_secs(5);
-pub(crate) const MAX_CONNECTIONS: usize = 128; // u8 session id space upper bound with margin
+pub(crate) const MAX_SESSION: u8 = 64; // u8 session id space upper bound with margin
+pub(crate) const MAX_CONNECTION: u16 = 1024;
 
 pub trait Payload {
     const PAYLOAD_TYPE: u8;
@@ -14,24 +16,24 @@ pub trait Payload {
 }
 
 pub struct Detached {
-    pub session_id: u8,
+    pub sid: u8,
 }
 impl Payload for Detached {
     const PAYLOAD_TYPE: u8 = 0x00;
     fn to_bytes(&self) -> Bytes {
-        let buf: [u8; 3] = [0x00, Self::PAYLOAD_TYPE, self.session_id];
+        let buf: [u8; 3] = [0x00, Self::PAYLOAD_TYPE, self.sid];
         Bytes::copy_from_slice(&buf)
     }
 }
 
 pub struct Attached {
-    pub session_id: u8,
+    pub sid: u8,
 }
 impl Payload for Attached {
     const PAYLOAD_TYPE: u8 = 0x01;
 
     fn to_bytes(&self) -> Bytes {
-        let buf: [u8; 3] = [0x00, Self::PAYLOAD_TYPE, self.session_id];
+        let buf: [u8; 3] = [0x00, Self::PAYLOAD_TYPE, self.sid];
         Bytes::copy_from_slice(&buf)
     }
 }
@@ -39,28 +41,42 @@ impl Payload for Attached {
 /// 区别于 Attached,
 /// 这是给服务端的通知
 pub struct ClientAttached<'a> {
-    pub session_id: u8,
-    pub addr: &'a str,
+    pub token: u32,
+    pub host: &'a Ipv4Addr,
 }
 impl Payload for ClientAttached<'_> {
     const PAYLOAD_TYPE: u8 = 0x02;
 
     fn to_bytes(&self) -> Bytes {
-        let header: [u8; 3] = [0x00, Self::PAYLOAD_TYPE, self.session_id];
-        let max_len = u16::MAX as usize;
+        let header: [u8; 2] = [0x00, Self::PAYLOAD_TYPE];
+        let bytes = &self.host.octets();
 
-        let bytes = self.addr.as_bytes();
-        let slice = if bytes.len() > max_len {
-            &bytes[..max_len]
-        } else {
-            bytes
-        };
-
-        let mut buf = BytesMut::with_capacity(2 + 2 + slice.len());
+        let mut buf = BytesMut::with_capacity(10);
         buf.put_slice(&header);
-        buf.put_u16_le(slice.len() as u16);
-        buf.put_slice(slice);
+        buf.put_u32_le(self.token);
+        buf.put_slice(bytes);
+        buf.freeze()
+    }
+}
 
+pub struct ClientActive<'a> {
+    pub sid: u8,
+    pub address: &'a SocketAddrV4,
+}
+
+impl Payload for ClientActive<'_> {
+    const PAYLOAD_TYPE: u8 = 0x03;
+
+    fn to_bytes(&self) -> Bytes {
+        let header: [u8; 3] = [0x00, Self::PAYLOAD_TYPE, self.sid];
+
+        let mut bytes = [0u8; 6];
+        bytes[..4].copy_from_slice(&self.address.ip().octets());
+        bytes[4..6].copy_from_slice(&self.address.port().to_le_bytes());
+
+        let mut buf = BytesMut::with_capacity(9);
+        buf.put_slice(&header);
+        buf.put_slice(&bytes);
         buf.freeze()
     }
 }
@@ -91,7 +107,7 @@ impl<'a> RelayMessage<'a> {
 }
 
 impl Payload for RelayMessage<'_> {
-    const PAYLOAD_TYPE: u8 = 0x03;
+    const PAYLOAD_TYPE: u8 = 0x04;
 
     fn to_bytes(&self) -> Bytes {
         let header: [u8; 3] = [0x00, Self::PAYLOAD_TYPE, self.code];
@@ -123,13 +139,13 @@ impl Payload for RelayMessage<'_> {
 }
 
 /// Server 查询当前在线客户端列表的回包
-/// 格式: [0x00][0x04][count u8]([session_id u8][uuid 16B])*
+/// 格式: [0x00][0x04][count u8]([session_id u8])*
 pub struct QueryClientsResult {
     /// (session_id, uuid) 对列表
-    pub clients: Vec<(u8, [u8; 16])>,
+    pub clients: Vec<u8>,
 }
 impl Payload for QueryClientsResult {
-    const PAYLOAD_TYPE: u8 = 0x04;
+    const PAYLOAD_TYPE: u8 = 0x05;
 
     fn to_bytes(&self) -> Bytes {
         let count = self.clients.len().min(u8::MAX as usize);
@@ -138,9 +154,8 @@ impl Payload for QueryClientsResult {
         buf.put_u8(0x00);
         buf.put_u8(Self::PAYLOAD_TYPE);
         buf.put_u8(count as u8);
-        for (sid, uuid) in self.clients.iter().take(count) {
+        for sid in self.clients.iter().take(count) {
             buf.put_u8(*sid);
-            buf.put_slice(uuid.as_ref());
         }
         buf.freeze()
     }

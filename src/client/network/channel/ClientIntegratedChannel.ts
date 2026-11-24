@@ -13,7 +13,7 @@ export class ClientIntegratedChannel extends ClientChannel {
         const writer = new BinaryWriter(size + 2);
         this.out.codec.encode(writer, payload);
         const buffer = writer.toUint8Array();
-        this.bus.sendBuffer(buffer);
+        this.bus.sendFrame(buffer);
     }
 
     public override feed(reader: BinaryReader): void {

@@ -28,7 +28,7 @@ export class ClientIntegratedBus implements ClientBus {
         this.channel = channel;
     }
 
-    public sendBuffer(buff: Uint8Array<ArrayBuffer>) {
+    public sendFrame(buff: Uint8Array<ArrayBuffer>) {
         this.worker.postMessage({
             type: 'packet',
             packet: buff.buffer

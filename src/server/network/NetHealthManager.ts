@@ -31,7 +31,7 @@ export class NetHealthManager {
         if (n === 0) return;
         try {
             if (stalled) {
-                Log.error(`[Net] tick late by ${gap.toFixed(1)}ms, ${n} connections over budget; bans skipped`);
+                Log.warn(`[Net] tick late by ${gap.toFixed(1)}ms, ${n} connections over budget; bans skipped`);
                 return;
             }
             for (const conn of this.overloaded) {

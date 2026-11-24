@@ -6,11 +6,13 @@ import type {ServerNetworkManager} from "../ServerNetworkManager.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {PacketCodec} from "../../../network/codec/PacketCodec.ts";
 import type {RelayPayload} from "../../../network/RelayPayload.ts";
+import type {ClientActive} from "../../../network/packet/relay/ClientActive.ts";
 import {ConnectionState} from "../ConnectionState.ts";
 import {RelayCodeMap} from "../../../network/RelayCodeMap.ts";
 import {NetworkSide} from "../../../network/NetworkSide.ts";
 import {RelayProtocols} from "../../../network/protocol/RelayProtocols.ts";
 import {Log} from "../../../utils/Log.ts";
+import {SocketAddr} from "../../../network/SocketAddr.ts";
 
 export class ServerRelayHandler implements PacketListener {
     private readonly manager: ServerNetworkManager;
@@ -18,7 +20,7 @@ export class ServerRelayHandler implements PacketListener {
 
     public constructor(manager: ServerNetworkManager) {
         this.manager = manager;
-        this.codec = RelayProtocols.RELAY.codec;
+        this.codec = RelayProtocols.SERVER.codec;
     }
 
     public onMessage(reader: BinaryReader) {
@@ -34,7 +36,11 @@ export class ServerRelayHandler implements PacketListener {
     }
 
     public onClientAttached(packet: ClientAttached) {
-        this.manager.permit(packet.sessionId, packet.addr);
+        this.manager.permit(packet.token, packet.host);
+    }
+
+    public onClientActive(packet: ClientActive) {
+        this.manager.active(packet.sid, new SocketAddr(packet.host, packet.port));
     }
 
     public onRelayMessage(packet: RelayMessage) {

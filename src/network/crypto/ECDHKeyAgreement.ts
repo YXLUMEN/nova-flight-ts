@@ -65,8 +65,8 @@ export class ECDHKeyAgreement {
     }
 
     public static async transcriptInfo(pubA: ByteSource, pubB: ByteSource) {
-        const writer = new BinaryWriter(1 + pubA.byteLength + pubB.byteLength);
-        writer.writeInt8(0x33);
+        const writer = new BinaryWriter(2 + pubA.byteLength + pubB.byteLength);
+        writer.writeInt16(0x6e66); // nf utf-8 hex
         writer.pushBytes(pubA);
         writer.pushBytes(pubB);
         const hash = await crypto.subtle.digest('SHA-256', writer.toUint8Array());

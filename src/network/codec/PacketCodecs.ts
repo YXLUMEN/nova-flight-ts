@@ -19,7 +19,6 @@ import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import {NbtEnd} from "../../nbt/element/NbtEnd.ts";
 import {NbtTypes} from "../../nbt/NbtTypes.ts";
 import {IllegalStateError} from "../../type/errors.ts";
-import {BlockPos} from "../../world/section/pos/BlockPos.ts";
 import {PacketCodecImpl} from "./PacketCodecImpl.ts";
 
 export class PacketCodecs {
@@ -109,12 +108,23 @@ export class PacketCodecs {
         reader => new Vec2(reader.readDouble(), reader.readDouble())
     );
 
-    public static readonly BLOCK_POS: PacketCodec<BlockPos> = PacketCodecs.of(
+    public static readonly IPV4: PacketCodec<string> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeUint32(value.x);
-            writer.writeUint32(value.y);
+            const parts = value.split('.');
+            if (parts.length !== 4) throw new SyntaxError('ipv4 syntax error');
+            for (const s of parts) {
+                const num = Number(s);
+                if (!Number.isFinite(num)) throw new TypeError('ipv4 num must finite');
+                writer.writeInt8(num);
+            }
         },
-        reader => BlockPos.of(reader.readUint32(), reader.readUint32())
+        reader => {
+            const parts: number[] = new Array(4).fill(0);
+            for (let i = 0; i < 4; i++) {
+                parts[i] = reader.readUint8();
+            }
+            return parts.join('.');
+        }
     );
 
     public static readonly NEVER: PacketCodec<any> = PacketCodecs.of(empty, () => {

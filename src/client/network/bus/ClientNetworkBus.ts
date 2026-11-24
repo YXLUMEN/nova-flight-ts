@@ -21,7 +21,7 @@ export class ClientNetworkBus extends WebSocketBus implements ClientBus {
         this.channel = channel;
     }
 
-    public sendBuffer(buff: Uint8Array<ArrayBuffer>) {
+    public sendFrame(buff: Uint8Array<ArrayBuffer>) {
         this.send(buff);
     }
 

@@ -9,7 +9,7 @@ export class FakeBus implements ClientBus {
     public setChannel(): void {
     }
 
-    public sendBuffer(): void {
+    public sendFrame(): void {
         throw new Error('channel not active');
     }
 

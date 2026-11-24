@@ -1,17 +1,17 @@
-use crate::network::infrastructure::states::{RelayState, ServerHandle, ServerManager};
-use crate::network::wss::{run_ws_server, OPEN_FLAG, SERVER_MANAGER};
+use crate::network::infrastructure::relay::{RelayInfo, RelayManager, RelayState};
+use crate::network::wss::{OPEN_FLAG, SERVER_MANAGER, run_ws_server};
 use log::{error, info};
 use rand::RngCore;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use tokio::net::TcpListener;
-use tokio::sync::{oneshot, Mutex};
+use tokio::sync::{Mutex, oneshot};
 
 #[tauri::command]
 pub async fn start_server(port: u16) -> Result<[u8; 32], String> {
     let state_cell = SERVER_MANAGER
         .get_or_init(|| async {
-            Mutex::new(ServerManager {
+            Mutex::new(RelayManager {
                 handle: None,
                 stop_tx: None,
             })
@@ -45,7 +45,7 @@ pub async fn start_server(port: u16) -> Result<[u8; 32], String> {
     let state = Arc::new(RelayState::new());
     tokio::spawn(run_ws_server(listener, state, rx));
 
-    guard.handle = Some(ServerHandle { port, secret });
+    guard.handle = Some(RelayInfo { port, secret });
 
     Ok(secret)
 }

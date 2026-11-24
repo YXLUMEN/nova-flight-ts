@@ -17,6 +17,7 @@ import {ClientEncryptChannel} from "../channel/ClientEncryptChannel.ts";
 import {ClientStartConfigC2SPacket} from "../../../network/packet/negotiate/ClientStartConfigC2SPacket.ts";
 import {NonceGenerator} from "../../../network/crypto/NonceGenerator.ts";
 import {GCMSession} from "../../../network/crypto/GCMSession.ts";
+import type {Payload} from "../../../network/Payload.ts";
 
 export class ClientNegotiateHandler extends ClientCommonHandler {
     private isEncrypt = false;
@@ -72,5 +73,10 @@ export class ClientNegotiateHandler extends ClientCommonHandler {
         const config = new ClientConfigHandler(this.client, this.connection);
         this.connection.setInbound(ConfigProtocols.SERVER_BOUND, config);
         this.connection.setOutBound(ConfigProtocols.CLIENT_BOUND);
+    }
+
+    public override accept(payload: Payload) {
+        if (payload.protocol?.() !== this.getPhase()) return;
+        super.accept(payload);
     }
 }

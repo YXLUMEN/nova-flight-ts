@@ -1,17 +1,16 @@
 use crate::network::infrastructure::header::{C2S, PACKET_TOO_LARGE};
 use crate::network::infrastructure::net::send_code;
 use crate::network::infrastructure::protocol::MAX_PAYLOAD_LEN;
+use crate::network::infrastructure::relay::RelayState;
 use crate::network::infrastructure::session::Session;
-use crate::network::infrastructure::states::RelayState;
-use crate::network::infrastructure::util::format_uuid;
 use bytes::{Buf, Bytes};
-use futures_util::stream::SplitStream;
 use futures_util::StreamExt;
+use futures_util::stream::SplitStream;
 use log::{debug, error, warn};
 use tokio::net::TcpStream;
 use tokio::sync::oneshot;
-use tokio_tungstenite::tungstenite::{Error, Message};
 use tokio_tungstenite::WebSocketStream;
+use tokio_tungstenite::tungstenite::{Error, Message};
 
 pub(crate) struct ClientContext<'a> {
     pub state: &'a RelayState,
@@ -52,12 +51,8 @@ async fn on_recv_client(
         Ok(_) => true,
         Err(e) => {
             error!(
-                "WebSocket read failed from client with id={}\n: {}",
-                session
-                    .uuid
-                    .map(|id| format_uuid(&id))
-                    .unwrap_or_else(|| "<no-id>".to_string()),
-                e
+                "WebSocket read failed from client \"{}\":\n {}",
+                session.sid, e
             );
             false
         }
@@ -85,7 +80,7 @@ async fn relay_client_message(state: &RelayState, session: &Session, payload: By
             // 解析验证 sessionId
             let mut cursor = &payload[1..2];
             let session_id = cursor.get_u8();
-            if session_id != session.session_id {
+            if session_id != session.sid {
                 warn!("Invalid sessionId from client, dropping connection");
                 return false;
             }
@@ -94,12 +89,8 @@ async fn relay_client_message(state: &RelayState, session: &Session, payload: By
                 return true;
             };
             error!(
-                "Failed to forward message from Client {}: {}",
-                session
-                    .uuid
-                    .map(|id| format_uuid(&id))
-                    .unwrap_or_else(|| "<no-id>".to_string()),
-                e
+                "Failed to forward message from Client \"{}\":\n {}",
+                session.sid, e
             );
             false
         }

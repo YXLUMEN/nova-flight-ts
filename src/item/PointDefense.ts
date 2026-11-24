@@ -70,9 +70,9 @@ export class PointDefense extends Item {
                 task.cancel();
                 return;
             }
-            const entity = targets.pop()!;
-            spawnLaserByVec(world as ServerWorld, holderPos, entity.positionRef, '#fff0a1', 2);
-            world.spawnParticle(ParticleEffects.DECOY_FLASH, entity.positionRef, 5);
+            const pos = targets.pop()!.positionRef;
+            spawnLaserByVec(world as ServerWorld, holderPos, pos, '#fff0a1', 2);
+            world.spawnParticle(ParticleEffects.DECOY_FLASH, pos, 5);
         });
     }
 

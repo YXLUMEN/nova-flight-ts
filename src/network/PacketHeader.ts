@@ -13,7 +13,8 @@ export const enum PacketHeader {
 export const enum ServerAction {
     KICK = 0x00,
     PERMIT = 0x01,
-    QUERY = 0x02,
-    BAN = 0x03,
-    UNBAN = 0x04,
+    REJECT = 0x02,
+    QUERY = 0x03,
+    BAN_IP = 0x04,
+    UNBAN_IP = 0x05,
 }
