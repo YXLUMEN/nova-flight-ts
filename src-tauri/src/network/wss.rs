@@ -159,7 +159,7 @@ async fn handle_connection(stream: TcpStream, address: SocketAddrV4, state: Arc<
     );
 
     if let Some(sid) = sid_option {
-        NEXT_SESSION_ID.deallocate(sid).await;
+        NEXT_SESSION_ID.dealloc(sid);
     }
     if let Err(e) = send_task.await {
         info!("Send task panicked: {}", e);
@@ -260,14 +260,13 @@ async fn attach_server(
         return Err(RegisterError::SecretMismatch);
     }
 
-    let session_id = NEXT_SESSION_ID
-        .allocate()
-        .await
+    let sid = NEXT_SESSION_ID
+        .alloc()
         .ok_or(RegisterError::Internal("No session id allocated"))?;
 
-    let session = Session::new(tx, session_id);
+    let session = Session::new(tx, sid);
     if let Err(e) = state.register_server(session.clone()).await {
-        NEXT_SESSION_ID.deallocate(session_id).await;
+        NEXT_SESSION_ID.dealloc(sid);
         return Err(RegisterError::Internal(e));
     }
 
@@ -275,9 +274,9 @@ async fn attach_server(
     instance.burnout_secret();
     drop(guard);
 
-    let packet = Attached { sid: session.sid };
+    let packet = Attached { sid };
     send_timeout(&session.tx, packet, Duration::from_secs(2)).await;
-    info!("Server registered with id {}", session_id);
+    info!("Server registered with id {}", sid);
     Ok(RoleContext::Server(session))
 }
 
@@ -388,7 +387,7 @@ async fn play_client(
         return None;
     }
 
-    let sid = NEXT_SESSION_ID.allocate().await?;
+    let sid = NEXT_SESSION_ID.alloc()?;
     // server must exist
     let Some(server) = state.get_server().await else {
         return Some(sid);
