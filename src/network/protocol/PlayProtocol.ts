@@ -32,7 +32,6 @@ import {GameOverS2CPacket} from "../packet/s2c/GameOverS2CPacket.ts";
 import {InventoryS2CPacket} from "../packet/s2c/InventoryS2CPacket.ts";
 import {ItemCooldownUpdateS2CPacket} from "../packet/s2c/ItemCooldownUpdateS2CPacket.ts";
 import {JoinGameS2CPacket} from "../packet/s2c/JoinGameS2CPacket.ts";
-import {KeepAliveS2CPacket} from "../packet/s2c/KeepAliveS2CPacket.ts";
 import {LaserWeaponActivate, LaserWeaponChange, LaserWeaponDeactivate} from "../packet/s2c/LaserWeaponS2CPacket.ts";
 import {NotGiveUpS2CPacket} from "../packet/s2c/NotGiveUpS2CPacket.ts";
 import {EntityEmitter, PosEmitter} from "../packet/s2c/ParticleEmitterS2CPacket.ts";
@@ -63,7 +62,6 @@ import {BlockChangeC2SPacket} from "../packet/c2s/BlockChangeC2SPacket.ts";
 import {ChatMessageC2SPacket} from "../packet/c2s/ChatMessageC2SPacket.ts";
 import {CommandExecutionC2SPacket} from "../packet/c2s/CommandExecutionC2SPacket.ts";
 import {FireSpecialC2SPacket} from "../packet/c2s/FireSpecialC2SPacket.ts";
-import {KeepAliveC2SPacket} from "../packet/c2s/KeepAliveC2SPacket.ts";
 import {PlayerFinishLoginC2SPacket} from "../packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerFireC2SPacket} from "../packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../packet/c2s/PlayerInputC2SPacket.ts";
@@ -115,7 +113,6 @@ export class PlayProtocol {
             .add(InventoryS2CPacket.ID, InventoryS2CPacket.CODEC)
             .add(ItemCooldownUpdateS2CPacket.ID, ItemCooldownUpdateS2CPacket.CODEC)
             .add(JoinGameS2CPacket.ID, JoinGameS2CPacket.CODEC)
-            .add(KeepAliveS2CPacket.ID, KeepAliveS2CPacket.CODEC)
             .add(LaserWeaponActivate.ID, LaserWeaponActivate.CODEC)
             .add(LaserWeaponChange.ID, LaserWeaponChange.CODEC)
             .add(LaserWeaponDeactivate.ID, LaserWeaponDeactivate.CODEC)
@@ -157,7 +154,6 @@ export class PlayProtocol {
             .add(ChatMessageC2SPacket.ID, ChatMessageC2SPacket.CODEC)
             .add(CommandExecutionC2SPacket.ID, CommandExecutionC2SPacket.CODEC)
             .add(FireSpecialC2SPacket.ID, FireSpecialC2SPacket.CODEC)
-            .add(KeepAliveC2SPacket.ID, KeepAliveC2SPacket.CODEC)
             .add(PlayerFinishLoginC2SPacket.ID, PlayerFinishLoginC2SPacket.CODEC)
             .add(PlayerFireC2SPacket.ID, PlayerFireC2SPacket.CODEC)
             .add(PlayerInputC2SPacket.ID, PlayerInputC2SPacket.CODEC)

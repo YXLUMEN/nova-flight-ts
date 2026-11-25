@@ -125,10 +125,10 @@ export abstract class World {
         x: number,
         y: number,
         power: number,
-        behaviour: ExplosionConfigs | null = null,
+        config: ExplosionConfigs | null = null,
         visual: ExplosionVisual | null = null
     ) {
-        const explosion = new Explosion(this, source, damageSource, x, y, power, behaviour, visual);
+        const explosion = new Explosion(this, source, damageSource, x, y, power, config, visual);
         explosion.apply();
         return explosion;
     }

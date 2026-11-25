@@ -1,5 +1,6 @@
 pub(crate) mod errors;
 pub mod header;
+pub(crate) mod heartbeat;
 pub mod net;
 pub mod protocol;
 pub(crate) mod relay;

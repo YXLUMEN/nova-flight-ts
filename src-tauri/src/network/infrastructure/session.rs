@@ -28,13 +28,6 @@ pub(crate) struct PendingSession {
     pub close: oneshot::Receiver<()>,
 }
 
-impl PendingSession {
-    pub fn clean(&mut self) {
-        self.allow.close();
-        self.close.close();
-    }
-}
-
 pub(crate) struct Admission<'a> {
     state: &'a RelayState,
     token: u32,

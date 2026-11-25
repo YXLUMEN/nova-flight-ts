@@ -1,4 +1,5 @@
 use crate::network::infrastructure::header::*;
+use crate::network::infrastructure::heartbeat::{HeartBeat, IdleWatch};
 use crate::network::infrastructure::net::*;
 use crate::network::infrastructure::protocol::{MAX_EXCLUDES, MAX_PAYLOAD_LEN, QueryClientsResult};
 use crate::network::infrastructure::relay::RelayState;
@@ -11,7 +12,7 @@ use log::{debug, error, info, warn};
 use std::time::Duration;
 use tokio::net::TcpStream;
 use tokio_tungstenite::WebSocketStream;
-use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::tungstenite::{Error, Message};
 
 pub(crate) struct ServerContext<'a> {
     pub state: &'a RelayState,
@@ -20,24 +21,51 @@ pub(crate) struct ServerContext<'a> {
 }
 
 pub(crate) async fn server_relay(mut ctx: ServerContext<'_>) {
-    while let Some(msg) = ctx.reader.next().await {
-        match msg {
-            Ok(Message::Binary(payload)) => {
-                if payload.len() > MAX_PAYLOAD_LEN {
-                    send_code(&ctx.session.tx, PACKET_TOO_LARGE);
+    use std::pin::pin;
+    use tokio::time::sleep_until;
+
+    let mut watch = IdleWatch::new();
+    let mut timer = pin!(sleep_until(watch.deadline()));
+
+    loop {
+        tokio::select! {
+            _ = &mut timer => {
+                debug!("server \"{}\" idle timeout", ctx.session.sid);
+                break;
+            }
+            msg = ctx.reader.next() => {
+                let Some(msg) = msg else {
+                    break;
+                };
+                let beat = on_recv(msg, &ctx).await;
+                if beat == HeartBeat::Break {
                     break;
                 }
 
-                relay_server_message(&ctx.state, &ctx.session, payload).await;
+                if let Some(deadline) = watch.should_reset(beat) {
+                    timer.as_mut().reset(deadline);
+                }
             }
-            Ok(Message::Close(_)) => {
-                break;
+        }
+    }
+}
+
+async fn on_recv(msg: Result<Message, Error>, ctx: &ServerContext<'_>) -> HeartBeat {
+    match msg {
+        Ok(Message::Binary(payload)) => {
+            if payload.len() > MAX_PAYLOAD_LEN {
+                send_code(&ctx.session.tx, PACKET_TOO_LARGE);
+                return HeartBeat::Break;
             }
-            Ok(_) => {}
-            Err(e) => {
-                error!("WebSocket read failed from server  {}", e);
-                break;
-            }
+
+            relay_server_message(&ctx.state, &ctx.session, payload).await;
+            HeartBeat::Fresh
+        }
+        Ok(Message::Close(_)) => HeartBeat::Break,
+        Ok(_) => HeartBeat::Fresh,
+        Err(e) => {
+            error!("WebSocket read failed from server  {}", e);
+            HeartBeat::Break
         }
     }
 }

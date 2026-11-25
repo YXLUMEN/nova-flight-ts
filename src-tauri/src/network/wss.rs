@@ -2,6 +2,7 @@ use crate::network::client::{ClientContext, client_relay};
 use crate::network::cmd::is_open;
 use crate::network::infrastructure::errors::RegisterError;
 use crate::network::infrastructure::header::*;
+use crate::network::infrastructure::heartbeat::Pinger;
 use crate::network::infrastructure::net::{send_code, send_timeout};
 use crate::network::infrastructure::protocol::*;
 use crate::network::infrastructure::relay::{PendingClient, RelayManager, RelayState};
@@ -10,9 +11,9 @@ use crate::network::infrastructure::session_alloc::SessionAllocator;
 use crate::network::infrastructure::util::{constant_time_eq, format_uuid, is_nil_uuid};
 use crate::network::server::{ServerContext, server_relay};
 use dashmap::Entry;
-use futures_util::stream::SplitStream;
+use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
-use log::{debug, error, info, log, warn};
+use log::{debug, error, info, log};
 use std::net::{SocketAddr, SocketAddrV4};
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, LazyLock};
@@ -130,22 +131,11 @@ async fn handle_connection(stream: TcpStream, address: SocketAddrV4, state: Arc<
     };
 
     // ws + mpsc
-    let (mut writer, mut reader) = ws_stream.split();
-    let (tx, mut rx) = mpsc::channel::<Bytes>(256);
+    let (writer, mut reader) = ws_stream.split();
+    let (tx, rx) = mpsc::channel::<Bytes>(256);
 
     // send to this connection
-    let send_task = tokio::spawn(async move {
-        while let Some(msg) = rx.recv().await {
-            let Err(e) = writer.send(Message::Binary(msg)).await else {
-                continue;
-            };
-            error!("ws write failed. cause by\n {}", e);
-            break;
-        }
-        // shut ws
-        let _ = timeout(Duration::from_secs(2), writer.close()).await;
-        drop(rx);
-    });
+    let send_task = tokio::spawn(start_send(rx, writer));
 
     debug!("Start to registry for \"{}\"", &address);
 
@@ -158,7 +148,7 @@ async fn handle_connection(stream: TcpStream, address: SocketAddrV4, state: Arc<
     };
 
     // send to opposite
-    // return 0 mean alloc fail, deallocate noop
+    // return None mean alloc fail, nothing need deallocate
     let sid_option = match role {
         RoleContext::Server(session) => play_server(&state, &session, reader).await,
         RoleContext::Client(session) => play_client(&state, session, &address, reader).await,
@@ -176,6 +166,38 @@ async fn handle_connection(stream: TcpStream, address: SocketAddrV4, state: Arc<
     if let Err(e) = send_task.await {
         info!("Send task panicked: {}", e);
     }
+}
+
+/// spawn this, it will recv from channel and send to ws.
+/// Furthermore, start a ping interval.
+async fn start_send(
+    mut rx: mpsc::Receiver<Bytes>,
+    mut writer: SplitSink<WebSocketStream<TcpStream>, Message>,
+) {
+    let mut pinger = Pinger::new();
+
+    loop {
+        tokio::select! {
+            msg = rx.recv() => {
+                let Some(msg) = msg else {
+                    break;
+                };
+                if let Err(e) = writer.send(Message::Binary(msg)).await {
+                    error!("ws write failed: {}", e);
+                    break;
+                }
+            },
+            ping = pinger.next() => {
+                if let Err(e) = writer.send(ping).await {
+                    error!("ws ping failed: {}", e);
+                    break;
+                }
+            }
+        }
+    }
+
+    let _ = timeout(Duration::from_secs(2), writer.close()).await;
+    drop(rx);
 }
 
 async fn attach_session(
@@ -385,18 +407,17 @@ async fn play_client(
         return Some(sid);
     }
 
-    // try upgrade session
+    // try upgrade session.
     let session = match state.upgrade(sid, token) {
         Ok(s) => s,
         Err(e) => {
-            warn!("pending \"{}\" {}", token, e);
+            debug!("pending \"{}\" {}", token, e);
             // only upgrade success will return session, so no need to clean active record.
-            // pending is already remove, shut receiver here.
-            pending.clean();
             return Some(sid);
         }
     };
     adm.settle();
+    drop(adm);
 
     // feed back client
     let attached = Attached { sid };
