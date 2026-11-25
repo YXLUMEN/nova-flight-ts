@@ -1,88 +1,64 @@
-use crate::network::infrastructure::relay::{RelayInfo, RelayManager, RelayState};
-use crate::network::wss::{OPEN_FLAG, SERVER_MANAGER, run_ws_server};
-use log::{error, info};
-use rand::RngCore;
+use crate::network::infrastructure::relay::{RelayInstance, RelaySecret, RelayState};
+use crate::network::wss::{RELAY_CELL, run_ws_server};
+use log::debug;
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::net::TcpListener;
-use tokio::sync::{Mutex, oneshot};
+use tokio::sync::{Mutex, OnceCell};
+
+static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new_with(AtomicBool::new(false));
 
 #[tauri::command]
-pub async fn start_server(port: u16) -> Result<[u8; 32], String> {
-    let state_cell = SERVER_MANAGER
-        .get_or_init(|| async {
-            Mutex::new(RelayManager {
-                handle: None,
-                stop_tx: None,
-            })
-        })
-        .await;
+pub async fn start_server(port: u16) -> Result<RelaySecret, String> {
+    let state_cell = RELAY_CELL.get_or_init(|| async { Mutex::new(None) }).await;
 
-    let mut guard = state_cell.lock().await;
-    if let Some(handle) = guard.handle.as_ref() {
-        return Err(format!("Server already listen on \"{}\"", handle.port));
+    let mut slot = state_cell.lock().await;
+    if let Some(exist) = slot.as_ref() {
+        return Err(format!("Server already listen on \"{}\"", exist.port));
     }
 
-    let (tx, rx) = oneshot::channel::<()>();
-    guard.stop_tx = Some(tx);
-
-    // 开始监听
     let addr = format!("0.0.0.0:{}", port);
-    let listener = match TcpListener::bind(&addr).await {
-        Ok(l) => l,
-        Err(e) => {
-            error!("Failed to bind {}: {}", addr, e);
-            return Err("Port already in use".into());
-        }
-    };
+    let listener = TcpListener::bind(&addr)
+        .await
+        .map_err(|e| format!("Failed to bind {}: {}", addr, e))?;
+    debug!("WebSocket server listening on {}", addr);
 
-    info!("WebSocket server listening on {}", addr);
-
-    // 生成随机密钥
-    let mut secret = [0u8; 32];
-    rand::thread_rng().fill_bytes(&mut secret);
+    let record = RelayInstance::create(port);
+    *slot = Some(record.instance);
+    drop(slot);
 
     let state = Arc::new(RelayState::new());
-    tokio::spawn(run_ws_server(listener, state, rx));
+    tokio::spawn(run_ws_server(listener, state, record.stop));
 
-    guard.handle = Some(RelayInfo { port, secret });
-
-    Ok(secret)
+    Ok(record.secret)
 }
 
 #[tauri::command]
 pub async fn stop_server() -> Result<bool, ()> {
-    let Some(state_cell) = SERVER_MANAGER.get() else {
-        info!("Server not initialized");
+    let Some(state_cell) = RELAY_CELL.get() else {
+        debug!("Server not initialized");
         return Ok(false);
     };
 
     let mut guard = state_cell.lock().await;
-    if let Some(tx) = guard.stop_tx.take() {
-        let _ = tx.send(());
-        info!("Stopping server");
-        Ok(true)
-    } else {
-        info!("Server not running");
-        Ok(false)
+    let running = guard.is_some();
+    if let Some(t) = guard.as_mut() {
+        t.stop();
     }
+    Ok(running)
 }
 
 #[tauri::command]
 pub fn set_open(bl: bool) -> bool {
-    if let Some(flag) = OPEN_FLAG.get() {
+    OPEN_FLAG.get().is_some_and(|flag| {
         flag.store(bl, Ordering::SeqCst);
         true
-    } else {
-        false
-    }
+    })
 }
 
 #[tauri::command]
 pub fn is_open() -> bool {
-    if let Some(flag) = OPEN_FLAG.get() {
-        return flag.load(Ordering::SeqCst);
-    }
-
-    false
+    OPEN_FLAG
+        .get()
+        .is_some_and(|flag| flag.load(Ordering::SeqCst))
 }

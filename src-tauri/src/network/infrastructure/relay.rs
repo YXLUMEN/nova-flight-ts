@@ -3,11 +3,12 @@ use ahash::AHashSet;
 use dashmap::iter::{Iter, IterMut};
 use dashmap::mapref::one::RefMut;
 use dashmap::{DashMap, Entry};
+use rand::RngCore;
 use std::net::IpAddr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use tokio::sync::RwLock;
-use tokio::sync::oneshot::Sender;
+use tokio::sync::oneshot::{Receiver, Sender, channel};
 
 pub(crate) struct PendingClient {
     tx: Tx,
@@ -212,12 +213,52 @@ impl RelayState {
     }
 }
 
-pub(crate) struct RelayInfo {
+pub(crate) type RelaySecret = [u8; 32];
+
+pub(crate) struct RelayInstance {
     pub port: u16,
-    pub secret: [u8; 32],
+    stop: Option<Sender<()>>,
+    secret: Option<RelaySecret>,
 }
 
-pub(crate) struct RelayManager {
-    pub handle: Option<RelayInfo>,
-    pub stop_tx: Option<Sender<()>>,
+pub(crate) struct InstanceRecord {
+    pub instance: RelayInstance,
+    pub secret: RelaySecret,
+    pub stop: Receiver<()>,
+}
+
+impl RelayInstance {
+    pub fn create(port: u16) -> InstanceRecord {
+        let (tx, rx) = channel::<()>();
+        let mut secret = [0u8; 32];
+        rand::thread_rng().fill_bytes(&mut secret);
+
+        let instance = RelayInstance {
+            port,
+            stop: Some(tx),
+            secret: Some(secret),
+        };
+        InstanceRecord {
+            instance,
+            stop: rx,
+            secret,
+        }
+    }
+
+    pub(crate) fn secret(&self) -> Option<&RelaySecret> {
+        self.secret.as_ref()
+    }
+
+    pub(crate) fn burnout_secret(&mut self) {
+        if let Some(mut key) = self.secret.take() {
+            key.fill(0);
+        }
+    }
+
+    pub(crate) fn stop(&mut self) -> bool {
+        self.stop.take().is_some_and(|tx| {
+            let _ = tx.send(());
+            true
+        })
+    }
 }

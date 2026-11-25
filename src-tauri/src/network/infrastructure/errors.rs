@@ -14,6 +14,7 @@ pub(crate) enum RegisterError {
     DuplicateClient,
     DuplicateServer,
     SecretMismatch,
+    SecretBurnout,
     // 违反内部不变量
     Internal(&'static str),
 }
@@ -22,9 +23,8 @@ impl RegisterError {
     pub fn level(self) -> Level {
         use RegisterError::*;
         match self {
-            Timeout | ChannelClosed | NotRegisterPacket | EmptyPacket | InvalidPacket | UuidNil => {
-                Level::Debug
-            }
+            Timeout | ChannelClosed | NotRegisterPacket | EmptyPacket | InvalidPacket | UuidNil
+            | SecretBurnout => Level::Debug,
             DuplicateClient => Level::Info,
             DuplicateServer | SecretMismatch => Level::Warn,
             Internal(_) => Level::Error,
@@ -45,6 +45,7 @@ impl fmt::Display for RegisterError {
             DuplicateClient => "duplicate client uuid",
             DuplicateServer => "server already exists",
             SecretMismatch => "server secret mismatch",
+            SecretBurnout => "server secret burnout",
             Internal(msg) => msg,
         })
     }

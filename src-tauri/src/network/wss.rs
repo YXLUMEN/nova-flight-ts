@@ -5,7 +5,7 @@ use crate::network::infrastructure::header::*;
 use crate::network::infrastructure::heartbeat::Pinger;
 use crate::network::infrastructure::net::{send_code, send_timeout};
 use crate::network::infrastructure::protocol::*;
-use crate::network::infrastructure::relay::{PendingClient, RelayManager, RelayState};
+use crate::network::infrastructure::relay::{PendingClient, RelayInstance, RelayState};
 use crate::network::infrastructure::session::{PendingSession, RoleContext, Session, Tx};
 use crate::network::infrastructure::session_alloc::SessionAllocator;
 use crate::network::infrastructure::util::{constant_time_eq, format_uuid, is_nil_uuid};
@@ -15,7 +15,6 @@ use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info, log};
 use std::net::{SocketAddr, SocketAddrV4};
-use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, LazyLock};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{Mutex, OnceCell, mpsc, oneshot};
@@ -23,22 +22,22 @@ use tokio::time::{Duration, timeout};
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 use tokio_tungstenite::{WebSocketStream, accept_async};
 
-pub(crate) static SERVER_MANAGER: OnceCell<Mutex<RelayManager>> = OnceCell::const_new();
-pub(crate) static OPEN_FLAG: OnceCell<AtomicBool> =
-    OnceCell::const_new_with(AtomicBool::new(false));
+pub(crate) type InstanceCell = OnceCell<Mutex<Option<RelayInstance>>>;
+pub(crate) static RELAY_CELL: InstanceCell = OnceCell::const_new();
+
 static NEXT_SESSION_ID: LazyLock<SessionAllocator> = LazyLock::new(|| SessionAllocator::new());
 
 pub async fn run_ws_server(
     listener: TcpListener,
     state: Arc<RelayState>,
-    mut stop_receiver: oneshot::Receiver<()>,
+    mut stop: oneshot::Receiver<()>,
 ) {
     let mut backoff = Duration::from_millis(100);
     let mut consecutive_errors = 0u32;
 
     loop {
         tokio::select! {
-                _ = &mut stop_receiver => {
+                _ = &mut stop => {
                     info!("Shutting down relay server");
                     state.schedule_shutdown();
                     break;
@@ -66,7 +65,7 @@ pub async fn run_ws_server(
                             continue;
                         }
 
-                        // the max value sid can be, u8::MAX - 1
+                        // the max flying cession can be
                         if state.pending_len() >= MAX_CONNECTION as usize {
                             debug!("Session limit reached ({}), rejecting {}", MAX_CONNECTION, address);
                             continue;
@@ -109,10 +108,9 @@ pub async fn run_ws_server(
     drop(state);
     info!("Relay server shutdown");
 
-    if let Some(state_cell) = SERVER_MANAGER.get() {
-        let mut guard = state_cell.lock().await;
-        guard.handle = None;
-        guard.stop_tx = None;
+    // drop global instance
+    if let Some(state_cell) = RELAY_CELL.get() {
+        state_cell.lock().await.take();
     }
 }
 
@@ -246,16 +244,16 @@ async fn attach_server(
     let provided_secret = &incoming[1..33];
 
     // check secret
-    let state_cell = SERVER_MANAGER
+    let state_cell = RELAY_CELL
         .get()
         .ok_or(RegisterError::Internal("Server manager not initialized"))?;
-    let mut guard = state_cell.lock().await;
-    let expected_secret = guard
-        .handle
-        .as_ref()
-        .map(|h| &h.secret)
-        .ok_or(RegisterError::Internal("No server handle"))?;
 
+    let mut guard = state_cell.lock().await;
+    let instance = guard
+        .as_mut()
+        .ok_or(RegisterError::Internal("Missing relay instance"))?;
+
+    let expected_secret = instance.secret().ok_or(RegisterError::SecretBurnout)?;
     if !constant_time_eq(provided_secret, expected_secret) {
         // also feedback duplicate server
         send_code(&tx, DUPLICATE_SERVER);
@@ -274,11 +272,8 @@ async fn attach_server(
     }
 
     // destroy key
-    let handle = guard
-        .handle
-        .as_mut()
-        .ok_or(RegisterError::Internal("No server handle"))?;
-    handle.secret.fill(0);
+    instance.burnout_secret();
+    drop(guard);
 
     let packet = Attached { sid: session.sid };
     send_timeout(&session.tx, packet, Duration::from_secs(2)).await;

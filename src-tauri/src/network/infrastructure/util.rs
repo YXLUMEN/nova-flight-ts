@@ -1,11 +1,13 @@
 use std::net::Ipv4Addr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+pub(crate) type UUID = [u8; 16];
+
 pub fn is_nil_uuid(uuid: &[u8]) -> bool {
-    uuid.iter().all(|&b| b == 0)
+    uuid.len() != 16 || uuid.iter().all(|&b| b == 0)
 }
 
-pub fn format_uuid(bytes: &[u8; 16]) -> String {
+pub fn format_uuid(bytes: &UUID) -> String {
     format!(
         "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
         bytes[0],
