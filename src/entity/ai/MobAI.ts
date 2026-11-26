@@ -2,12 +2,16 @@ import type {MobEntity} from "../mob/MobEntity.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import type {EntityAi} from "./EntityAi.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import type {Entity} from "../Entity.ts";
 import {getNearestEntityByVec} from "../../utils/math/collide.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {SimpleRandom} from "../../utils/math/random/SimpleRandom.ts";
+import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
 
 export const enum AiBehavior {
+    Idle,
     Wander,
     Chase,
     Flee,
@@ -19,10 +23,14 @@ export class MobAI implements EntityAi {
 
     private readonly entity: MobEntity;
     private readonly dir = new MutVec2(1, 0);
-    private readonly targetPos = MutVec2.zero();
     private readonly random: SimpleRandom;
 
-    private changeTimer = 0;
+    private readonly targetPos = MutVec2.zero();
+    private target: Entity | null = null;
+    private targetYaw: number = 0;
+
+    private wanderDirTimer = 0;
+    private idleYawTimer = 0;
     private behavior: number = AiBehavior.Simple;
 
     public constructor(entity: MobEntity) {
@@ -36,22 +44,26 @@ export class MobAI implements EntityAi {
         const speedMultiplier = this.entity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speedMultiplier === 0) return;
         const speed = this.entity.getMovementSpeed() * speedMultiplier;
+        const pos = this.target?.positionRef ?? this.targetPos;
 
         switch (this.behavior) {
+            case AiBehavior.Idle:
+                this.idle(speed * 0.5);
+                break;
+            case AiBehavior.Wander:
+                this.wander(speed);
+                this.faceTarget(pos);
+                break;
             case AiBehavior.Chase:
                 this.moveToward(speed);
-                this.faceTarget(this.targetPos, 0.19634375);
+                this.faceTarget(pos);
                 break;
             case AiBehavior.Flee:
-                this.moveAway(this.targetPos, speed);
-                this.faceTarget(this.targetPos, 0.19634375);
+                this.moveAway(pos, speed);
+                this.faceTarget(pos);
                 break;
             case AiBehavior.Simple:
                 this.simpleMove();
-                break;
-            default:
-                this.wander(speed);
-                this.faceTarget(this.targetPos, 0.19634375);
                 break;
         }
     }
@@ -59,25 +71,27 @@ export class MobAI implements EntityAi {
     public decision() {
         if (this.disable) return;
 
-        if (this.behavior !== AiBehavior.Simple && (this.entity.age & 23) !== 0) {
+        if (this.behavior !== AiBehavior.Simple && (this.entity.age & 31) === 0) {
             this.chooseTarget();
         }
     }
 
     private chooseTarget() {
-        const world = this.entity.getWorld();
-        if (world.isClient) return;
+        if (isClient) return;
 
         const pos = this.entity.positionRef;
-        const target = getNearestEntityByVec(pos, world.getPlayers());
-        if (!target) return;
+        const players = this.entity.getWorld().getPlayers();
+        const target = getNearestEntityByVec(pos, players, EntityPredicates.CAN_DAMAGE);
+        this.target = target;
 
-        const playerPos = target.positionRef;
-        this.targetPos.set(playerPos.x, playerPos.y);
+        if (!target) {
+            this.setBehavior(AiBehavior.Idle);
+            return;
+        }
 
-        const dx = playerPos.x - pos.x;
-        const dy = playerPos.y - pos.y;
-        const distSq = dx * dx + dy * dy;
+        const targetPos = target.positionRef;
+        const distSq = pos.distSqTo(targetPos);
+        this.targetPos.set(targetPos.x, targetPos.y);
 
         if (this.entity.isRangedAttacker()) {
             if (distSq < 230400) {
@@ -99,29 +113,33 @@ export class MobAI implements EntityAi {
     }
 
     public setDisabled(value: boolean): void {
+        if (!value) this.target = null;
         this.disable = value;
-    }
-
-    public setTarget(pos: Vec2) {
-        this.targetPos.set(pos.x, pos.y);
     }
 
     public setBehavior(behavior: number): void {
         this.behavior = behavior;
     }
 
-    public getBehavior(): number {
-        return this.behavior;
-    }
-
     public isSimple() {
         return this.behavior === AiBehavior.Simple;
     }
 
+    private idle(speed: number): void {
+        if (this.idleYawTimer-- <= 0) {
+            this.idleYawTimer = this.random.nextInt(35, 50);
+            this.targetYaw += this.random.nextFloat();
+        }
+
+        this.entity.setClampYaw(this.targetYaw);
+        const yaw = this.entity.getYaw();
+        this.entity.updateVelocity(speed, Math.cos(yaw), Math.sin(yaw));
+    }
+
     private wander(speed: number): void {
-        if (this.changeTimer-- <= 0) {
+        if (this.wanderDirTimer-- <= 0) {
             this.dir.set(this.random.nextFloat() - 0.5, this.random.nextFloat() - 0.5);
-            this.changeTimer = 50;
+            this.wanderDirTimer = 50;
         }
         this.entity.updateVelocity(speed, this.dir.x, this.dir.y);
     }

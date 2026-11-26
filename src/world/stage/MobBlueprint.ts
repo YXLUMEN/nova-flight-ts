@@ -62,7 +62,7 @@ export class MobBlueprint {
         if (this.wander) {
             const ai = mob.getAi();
             if (ai instanceof MobAI) {
-                ai.setBehavior(AiBehavior.Wander);
+                ai.setBehavior(AiBehavior.Idle);
             }
         }
 

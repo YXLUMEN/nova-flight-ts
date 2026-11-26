@@ -2,8 +2,8 @@ import type {Entity} from "../../entity/Entity.ts";
 import type {MutVec2} from "./MutVec2.ts";
 import type {Predicate} from "../../type/types.ts";
 import type {Vec2} from "./Vec2.ts";
-import type {World} from "../../world/World.ts";
 import {clamp, HALF_PI, TAU, wrapRadians} from "./math.ts";
+import {any} from "../util.ts";
 import {AABB} from "./AABB.ts";
 
 export function getBoundingRadius(entity: Entity): number {
@@ -138,16 +138,17 @@ export function pointToAABBMinDistSq(px: number, py: number, left: number, top: 
 export function getNearestEntity<T extends Entity>(
     x: number, y: number,
     entities: Iterable<T>,
+    predicate?: Predicate<T>,
     maxDistanceSq?: number,
-    predicate?: Predicate<T>
 ): T | null {
+    predicate ??= any;
     let nearest = null;
     let nearestDistSq = maxDistanceSq !== undefined
         ? maxDistanceSq
         : Infinity;
 
     for (const entity of entities) {
-        if (entity.isRemoved() || predicate?.(entity)) continue;
+        if (entity.isRemoved() || !predicate(entity)) continue;
 
         const pos = entity.positionRef;
         const dx = pos.x - x;
@@ -165,28 +166,25 @@ export function getNearestEntity<T extends Entity>(
 export function getNearestEntityByVec<T extends Entity>(
     center: Vec2,
     entities: Iterable<T>,
+    predicate?: Predicate<T>,
     maxDistanceSq?: number,
-    predicate?: Predicate<T>
 ): T | null {
-    return getNearestEntity(center.x, center.y, entities, maxDistanceSq, predicate);
+    return getNearestEntity(center.x, center.y, entities, predicate, maxDistanceSq);
 }
 
 export function acquireTarget(
-    world: World,
+    candidate: Iterable<Entity>,
     missilePos: Vec2,
     missileYaw: number,
     owner: Entity | null,
 ): Entity | null {
-    const mobs = world.getMobs();
-    if (mobs.size === 0) return null;
-
     let best: Entity | null = null;
     let bestScore = -Infinity;
 
-    for (const mob of mobs) {
-        if (mob.isRemoved() || mob === owner) continue;
+    for (const entity of candidate) {
+        if (entity.isRemoved() || entity === owner) continue;
 
-        const mobPos = mob.positionRef;
+        const mobPos = entity.positionRef;
         const dx = mobPos.x - missilePos.x;
         const dy = mobPos.y - missilePos.y;
         const dist2 = dx * dx + dy * dy;
@@ -195,7 +193,7 @@ export function acquireTarget(
         const yawDiff = Math.abs(((yawToMob - missileYaw + Math.PI) % TAU) - Math.PI);
         const facingScore = -yawDiff * 200;
 
-        const mobVel = mob.velocityRef;
+        const mobVel = entity.velocityRef;
         const dist = Math.sqrt(dist2 + 1);
         const radialSpeed = (dx * mobVel.x + dy * mobVel.y) / dist;
         const velScore = -Math.abs(radialSpeed) * 0.5;
@@ -203,7 +201,7 @@ export function acquireTarget(
         const totalScore = facingScore - dist + velScore;
         if (totalScore > bestScore) {
             bestScore = totalScore;
-            best = mob;
+            best = entity;
         }
     }
 

@@ -11,6 +11,7 @@ export class EntityPredicates {
     public static readonly ALIVE_NOT_PLAYER = (entity: Entity) => entity.isAlive() && !entity.isPlayer();
     public static readonly MOB = (entity: Entity) => entity instanceof MobEntity;
     public static readonly IS_ALIVE = (entity: Entity) => entity.isAlive();
+    public static readonly CAN_DAMAGE = (entity: Entity) => !entity.invulnerable;
 
     public static inRangeVec(center: Vec2, radius: number) {
         const r2 = radius * radius;

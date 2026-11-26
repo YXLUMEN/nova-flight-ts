@@ -135,9 +135,7 @@ export class BinaryWriter {
         this.writeInt8(v ? 1 : 0);
     }
 
-    /**
-     * Use Uint16 express total length
-     * */
+    /** Use Uint16 express total length */
     public writeString(s: string) {
         const utf8 = new TextEncoder().encode(s);
         this.writeUint16(utf8.length);

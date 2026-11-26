@@ -14,9 +14,4 @@ export class RelayProtocols {
             .add(ClientActive.ID, ClientActive.CODEC) // 0x03
             .add(RelayMessage.ID, RelayMessage.CODEC) // 0x04
     );
-
-    public static readonly CLIENT = ProtocolInfoBuilder.relayBound(
-        builder => builder
-            .add(Detached.ID, Detached.CODEC)
-    );
 }

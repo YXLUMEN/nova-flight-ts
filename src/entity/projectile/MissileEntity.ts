@@ -147,9 +147,9 @@ export class MissileEntity extends RocketEntity {
         this.applyGuidance();
     }
 
-    private maintainTargetLock(): void {
+    protected maintainTargetLock(): void {
         if (this.relockCooldown > 0) this.relockCooldown--;
-        if (this.target !== null && !this.target.isRemoved()) return;
+        if (this.target !== null && this.target.isAlive()) return;
         if ((this.age & 3) !== 0 || this.relockCooldown > 0) return;
 
         const newTarget = this.acquireTarget();
@@ -269,8 +269,10 @@ export class MissileEntity extends RocketEntity {
     }
 
     protected acquireTarget(): Entity | null {
+        const mobs = this.getWorld().getMobs();
+        if (mobs.size === 0) return null;
         return acquireTarget(
-            this.getWorld(),
+            mobs,
             this.positionRef,
             this.getYaw(),
             this.getOwner()

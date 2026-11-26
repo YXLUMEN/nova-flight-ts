@@ -3,9 +3,9 @@ import type {SpawnContext} from "./SpawnContext.ts";
 import {clamp} from "../../utils/math/math.ts";
 
 export class SpawnRule {
+    private readonly cfg: SpawnRuleConfig;
     private ticks = 0;
     private next = 0;
-    private readonly cfg: SpawnRuleConfig;
 
     public constructor(cfg: SpawnRuleConfig) {
         this.cfg = cfg;

@@ -1,6 +1,6 @@
-import {Identifier} from "../registry/Identifier.ts";
 import type {Payload} from "./Payload.ts";
 import type {Comparable} from "../type/Comparable.ts";
+import {Identifier} from "../registry/Identifier.ts";
 
 // @ts-ignore 忽略未使用的泛型
 export class PayloadType<T extends Payload> implements Comparable {

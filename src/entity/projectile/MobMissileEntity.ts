@@ -76,7 +76,7 @@ export class MobMissileEntity extends MissileEntity {
 
     protected override acquireTarget(): Entity | null {
         const players = this.getWorld().getPlayers();
-        return getNearestEntityByVec(this.positionRef, players);
+        return getNearestEntityByVec(this.positionRef, players, EntityPredicates.CAN_DAMAGE);
     }
 
     public override moveOrInterpolateTo(pos?: Vec2, yaw?: number) {
