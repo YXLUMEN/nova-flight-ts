@@ -1,5 +1,4 @@
 use crate::network::client::{ClientContext, client_relay};
-use crate::network::cmd::is_open;
 use crate::network::infrastructure::errors::RegisterError;
 use crate::network::infrastructure::header::*;
 use crate::network::infrastructure::heartbeat::Pinger;
@@ -53,8 +52,7 @@ pub async fn run_ws_server(
                             continue;
                         };
 
-                        let is_local = address.ip().is_loopback();
-                        if !is_open() && !is_local {
+                        if !state.is_open() {
                             debug!("Rejected non-local connection from {}", address);
                             continue;
                         }

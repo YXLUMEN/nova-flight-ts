@@ -44,8 +44,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             start_server,
             stop_server,
-            set_open,
-            is_open,
             chose_dir,
             traverse_dir_cmd,
             start_lan_announce,

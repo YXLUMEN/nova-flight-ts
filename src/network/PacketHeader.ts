@@ -18,4 +18,5 @@ export const enum ServerAction {
     QUERY = 0x04,
     BAN_IP = 0x05,
     UNBAN_IP = 0x06,
+    ACCEPT_CONN = 0x07,
 }

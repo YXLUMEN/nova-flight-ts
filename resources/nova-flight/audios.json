@@ -53,9 +53,6 @@
   "prepare_to_fly": {
     "file": "nova-flight:/prepare_to_fly.ogg"
   },
-  "steel_requiem": {
-    "file": "nova-flight:/steel_requiem.ogg"
-  },
   "tropic_thunder": {
     "file": "nova-flight:/tropic_thunder.ogg"
   },
@@ -79,5 +76,8 @@
   },
   "mutation": {
     "file": "nova-flight:/mutation.ogg"
+  },
+  "deep_space_travels": {
+    "file": "nova-flight:/deep_space_travels.mp3"
   }
 }

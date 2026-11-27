@@ -8,17 +8,6 @@ export interface LanServer {
     last_seen_ms: number;
 }
 
-/** UDP discovery port used by the Rust LAN discovery module. */
-export const LAN_DISCOVERY_PORT = 25567;
-
-export function openOnLan(bl: boolean): Promise<boolean> {
-    return invoke('set_open', {bl});
-}
-
-export function isOpened(): Promise<boolean> {
-    return invoke('is_open');
-}
-
 export async function startLanAnnounce(
     port: number,
     name: string,

@@ -58,4 +58,12 @@ export class RelayActionBuilder {
         PacketCodecs.IPV4.encode(writer, ip);
         return writer.toUint8Array();
     }
+
+    public static acceptConn(open: boolean) {
+        const buf = new Uint8Array(3);
+        buf[0] = PacketHeader.SERVER_ACTION;
+        buf[1] = ServerAction.ACCEPT_CONN;
+        buf[2] = (open ? 1 : 0) & 0xFF;
+        return buf;
+    }
 }

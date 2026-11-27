@@ -55,6 +55,7 @@ register_actions! {
     admission::Permit,
     admission::Reject,
     admission::ActiveAck,
+    admission::AcceptConn,
     query::Query,
     enforce::Kick,
     enforce::BanIp,

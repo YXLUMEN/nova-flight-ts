@@ -75,6 +75,26 @@ impl RelayAction for ActiveAck {
     }
 }
 
+pub(crate) struct AcceptConn {
+    open: bool,
+}
+
+impl RelayAction for AcceptConn {
+    const OPCODE: u8 = header::ACCEPT_CONN;
+
+    fn decode(data: &[u8]) -> Result<Self, ActionError> {
+        match data {
+            [b] => Ok(AcceptConn { open: *b != 0 }),
+            _ => Err(ActionError::Code(header::EMPTY_SID)),
+        }
+    }
+
+    async fn execute(self, ctx: &ActionCtx<'_>) -> Result<(), ActionError> {
+        ctx.state.set_open(self.open);
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,5 +141,11 @@ mod tests {
                 Err(ActionError::Code(header::INVALID_ACTION))
             ));
         }
+    }
+
+    #[test]
+    fn accept_conn_u8_to_bool() {
+        let AcceptConn { open } = AcceptConn::decode(&[1]).unwrap();
+        assert_eq!(open, true);
     }
 }

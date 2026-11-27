@@ -365,6 +365,12 @@
       "tier": "unowned"
     },
     {
+      "path": "audios/deep_space_travels.mp3",
+      "tier": "unowned",
+      "author": "Andreas Waldetoft",
+      "source": "Stellaris Digital Soundtrack"
+    },
+    {
       "path": "textures/**",
       "tier": "unowned"
     },

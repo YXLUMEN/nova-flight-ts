@@ -16,14 +16,14 @@ export async function buildEncrypt(
     encrypt: GCMEncrypt,
     writer: BinaryWriter,
     header: PacketHeader,
-    ext: number,
+    sid: number,
 ) {
     const nonce = encrypt.nonce();
     const encrypted = await encrypt.encrypt(nonce, writer.toUint8Array());
     writer.reset();
 
     writer.writeInt8(header);
-    writer.writeInt8(ext);
+    writer.writeInt8(sid);
     writer.pushBytes(nonce);
     writer.pushBytes(encrypted);
     return writer.toUint8Array();

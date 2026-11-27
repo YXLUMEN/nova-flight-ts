@@ -31,12 +31,12 @@ export class Audios {
     public static readonly FLOATING_TREES = this.register('floating_trees');
     public static readonly MOOG_CITY = this.register('moog_city_2');
 
-    public static readonly STEEL_REQUIEM = this.register('steel_requiem');
     public static readonly TROPIC_THUNDER = this.register('tropic_thunder');
 
     public static readonly SCOURGE_OF_THE_UNIVERSE = this.register('scourge_of_the_universe');
     public static readonly UNIVERSAL_COLLAPSE = this.register('universal_collapse');
     public static readonly THE_TALE_OF_A_CRUEL_WORLD = this.register('the_tale_of_a_cruel_world');
+    public static readonly DEEP_SPACE_TRAVELS = this.register('deep_space_travels');
 
     private static register(id: string) {
         const identifier = Identifier.ofVanilla(id);

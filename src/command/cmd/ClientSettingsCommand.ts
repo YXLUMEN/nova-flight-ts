@@ -1,11 +1,10 @@
 import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
 import type {ClientCommandSource} from "../../client/command/ClientCommandSource.ts";
 import {stopServer} from "../../client/ipc/integrated_server.ts";
-import {isOpened, openOnLan} from "../../client/ipc/lan_discovery.ts";
 import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
 import {validateIpv4} from "../../utils/address_util.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
-import {CommandError, IllegalArgumentError} from "../../type/errors.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
 import {IntArgumentType} from "../argument/IntArgumentType.ts";
 import {NormalStringArgumentType} from "../argument/NormalStringArgumentType.ts";
 import {ServerStorage} from "../../server/storage/ServerStorage.ts";
@@ -56,19 +55,13 @@ export class ClientSettingsCommand {
                             literal<T>('open')
                                 .then(
                                     argument<T, boolean>('open', BoolArgumentType.bool())
-                                        .executes(async (ctx) => {
+                                        .executes(ctx => {
                                             const bl = CommandUtil.assert(ctx, 'open', Boolean);
-                                            const success = await openOnLan(bl);
-                                            if (!success) {
-                                                throw new CommandError(bl ? '\x1b[31mCannot open on LAN' : '\x1b[31mCannot close port');
-                                            }
-
                                             if (RuntimeConfig.generalMode !== bl) {
                                                 NovaFlightClient.instance().requireStop();
                                             }
-
                                             RuntimeConfig.generalMode = bl;
-                                            ctx.source.addMessage(bl ? 'Now is open on LAN' : 'Close port');
+                                            ctx.source.addMessage(bl ? 'World will be open on LAN' : 'Close port');
                                         })
                                 )
                         )
@@ -123,9 +116,8 @@ export class ClientSettingsCommand {
                         )
                         .then(
                             literal<T>('open')
-                                .executes(async ctx => {
-                                    const isOpen = await isOpened();
-                                    let message = isOpen ?
+                                .executes(ctx => {
+                                    let message = RuntimeConfig.generalMode ?
                                         `World is open on \x1b[32m"${RuntimeConfig.port}"` :
                                         `No open on web`;
                                     ctx.source.addMessage(message);

@@ -2,56 +2,57 @@
 
 > **本文件依据 `resources/nova-flight/rights.json` 自动生成, 请勿手工编辑。**
 > 权威数据源:[`resources/nova-flight/rights.json`](resources/nova-flight/rights.json);分级与发行规则见 [
-`LICENSE-ASSETS.md`](LICENSE-ASSETS.md)。
+> `LICENSE-ASSETS.md`](LICENSE-ASSETS.md)。
 
-**统计**:共 372 项 —— `owned` 321 · `unowned` 24 · `public` 9 · `ai` 18
+**统计**:共 391 项 —— `owned` 339 · `unowned` 25 · `public` 9 · `ai` 18
 
-## Ⅱ 类 · 无所有权 (`unowned`)
+## Ⅱ 类 · 无所有权(`unowned`)
 
 > 本项目不主张任何权利,仅供非商业同人使用。统一免责声明见 `LICENSE-ASSETS.md`。
 
-| 资源                                   | 作者 | 来源 | 说明 | 可商用   |
-|----------------------------------------|------|------|------|----------|
-| `audios/floating_trees.ogg`            |      |      |      | 禁止商用 |
-| `audios/moog_city_2.ogg`               |      |      |      | 禁止商用 |
-| `audios/mutation.ogg`                  |      |      |      | 禁止商用 |
-| `audios/scourge_of_the_universe.ogg`   |      |      |      | 禁止商用 |
-| `audios/steel_requiem.ogg`             |      |      |      | 禁止商用 |
-| `audios/the_tale_of_a_cruel_world.ogg` |      |      |      | 禁止商用 |
-| `audios/tropic_thunder.ogg`            |      |      |      | 禁止商用 |
-| `audios/universal_collapse.ogg`        |      |      |      | 禁止商用 |
-| `sounds/charge_ready.wav`              |      |      |      | 禁止商用 |
-| `sounds/phase_change.ogg`              |      |      |      | 禁止商用 |
-| `audios/beginning.ogg`                 |      |      |      | 禁止商用 |
-| `sounds/cannon40/**`                   |      |      |      | 禁止商用 |
-| `sounds/cloud_lighning/**`             |      |      |      | 禁止商用 |
-| `sounds/coilguns/**`                   |      |      |      | 禁止商用 |
-| `sounds/emp/**`                        |      |      |      | 禁止商用 |
-| `sounds/explosion/**`                  |      |      |      | 禁止商用 |
-| `sounds/laser/**`                      |      |      |      | 禁止商用 |
-| `sounds/minigun/**`                    |      |      |      | 禁止商用 |
-| `sounds/missile/**`                    |      |      |      | 禁止商用 |
-| `sounds/railguns/**`                   |      |      |      | 禁止商用 |
-| `sounds/shield/**`                     |      |      |      | 禁止商用 |
-| `sounds/torpedoes/**`                  |      |      |      | 禁止商用 |
-| `sounds/ui/**`                         |      |      |      | 禁止商用 |
-| `textures/**`                          |      |      |      | 禁止商用 |
+| 资源                                   | 作者              | 来源                         | 说明 | 可商用   |
+|----------------------------------------|-------------------|------------------------------|------|----------|
+| `audios/deep_space_travels.mp3`        | Andreas Waldetoft | Stellaris Digital Soundtrack |      | 禁止商用 |
+| `audios/floating_trees.ogg`            |                   |                              |      | 禁止商用 |
+| `audios/moog_city_2.ogg`               |                   |                              |      | 禁止商用 |
+| `audios/mutation.ogg`                  |                   |                              |      | 禁止商用 |
+| `audios/scourge_of_the_universe.ogg`   |                   |                              |      | 禁止商用 |
+| `audios/the_tale_of_a_cruel_world.ogg` |                   |                              |      | 禁止商用 |
+| `audios/tropic_thunder.ogg`            |                   |                              |      | 禁止商用 |
+| `audios/universal_collapse.ogg`        |                   |                              |      | 禁止商用 |
+| `sounds/phase_change.ogg`              |                   |                              |      | 禁止商用 |
+| `audios/beginning.ogg`                 |                   |                              |      | 禁止商用 |
+| `audios/steel_requiem.ogg`             |                   |                              |      | 禁止商用 |
+| `sounds/cannon40/**`                   |                   |                              |      | 禁止商用 |
+| `sounds/charge_ready.wav`              |                   |                              |      | 禁止商用 |
+| `sounds/cloud_lighning/**`             |                   |                              |      | 禁止商用 |
+| `sounds/coilguns/**`                   |                   |                              |      | 禁止商用 |
+| `sounds/emp/**`                        |                   |                              |      | 禁止商用 |
+| `sounds/explosion/**`                  |                   |                              |      | 禁止商用 |
+| `sounds/laser/**`                      |                   |                              |      | 禁止商用 |
+| `sounds/minigun/**`                    |                   |                              |      | 禁止商用 |
+| `sounds/missile/**`                    |                   |                              |      | 禁止商用 |
+| `sounds/railguns/**`                   |                   |                              |      | 禁止商用 |
+| `sounds/shield/**`                     |                   |                              |      | 禁止商用 |
+| `sounds/torpedoes/**`                  |                   |                              |      | 禁止商用 |
+| `sounds/ui/**`                         |                   |                              |      | 禁止商用 |
+| `textures/**`                          |                   |                              |      | 禁止商用 |
 
-## Ⅲ 类 · 公开 (`public`)
+## Ⅲ 类 · 公开(`public`)
 
 | 资源                           | 作者 | 来源                 | 协议                               | 可商用   |
 |--------------------------------|------|----------------------|------------------------------------|----------|
 | `sounds/barrel_open.ogg`       |      |                      | CC0-1.0                            | 禁止商用 |
 | `sounds/cannon125/fire_01.ogg` |      | https://pixabay.com/ | https://pixabay.com/service/terms/ | 禁止商用 |
 | `sounds/cannon90/fire_01.ogg`  |      | https://pixabay.com/ | https://pixabay.com/service/terms/ | 禁止商用 |
-| `sounds/ciws/fire.wav`         |      |                      |                                    | 禁止商用 |
-| `sounds/decoy_fire.wav`        |      |                      | CC0-1.0                            | 禁止商用 |
 | `sounds/shell_reload.ogg`      |      |                      | CC0-1.0                            | 禁止商用 |
 | `sounds/arc/**`                |      | https://pixabay.com/ | https://pixabay.com/service/terms/ | 禁止商用 |
+| `sounds/ciws/fire.wav`         |      |                      |                                    | 禁止商用 |
+| `sounds/decoy_fire.wav`        |      |                      | CC0-1.0                            | 禁止商用 |
 | `sounds/kinetic_artillery/**`  |      | https://pixabay.com/ | https://pixabay.com/service/terms/ | 禁止商用 |
 | `sounds/storm_fire/**`         |      |                      | CC0-1.0                            | 禁止商用 |
 
-## Ⅳ 类 · AI 生成 (`ai`)
+## Ⅳ 类 · AI 生成(`ai`)
 
 > 归属随 (人类投入 × 法域 × 平台条款) 而定;不清楚的字段留空。发行默认不进商业包。
 
@@ -76,11 +77,11 @@
 | `audios/we_made_it.ogg`                      | Xouerta, YXLumen | suno v6-mini | Xouerta:提示词; YXLumen:后期 | https://suno.com/terms | 禁止商用 |
 | `audios/zerg.ogg`                            | Xouerta, YXLumen | suno v6-mini | Xouerta:提示词; YXLumen:后期 | https://suno.com/terms | 禁止商用 |
 
-## Ⅰ 类 · 有所有权 (`owned`)
+## Ⅰ 类 · 有所有权(`owned`)
 
 > All Rights Reserved,须授权。以下仅列出已登记附加信息的条目。
 
-其余 **321** 项仅标记为 `owned`,未填附加信息 (见 `rights.json`)。
+其余 **339** 项仅标记为 `owned`,未填附加信息(见 `rights.json`)。
 
-> 注意:清单中另有 17 条未在磁盘找到的条目 (默认保留,见 `rights.json`)。
+> 注意:清单中另有 21 条未在磁盘找到的条目(默认保留,见 `rights.json`)。
 

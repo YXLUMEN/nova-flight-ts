@@ -19,6 +19,7 @@ export class BGMManager {
         Audios.BEGINNING,
         Audios.MOOG_CITY,
         Audios.FLOATING_TREES,
+        Audios.DEEP_SPACE_TRAVELS,
     ]);
     private static readonly BOSS_PHASE = new SoundQueue([
         Audios.NO_MERCY,

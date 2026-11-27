@@ -9,7 +9,6 @@ export class GameProfile {
         this.sessionId = sessionId;
         this.clientId = clientId;
         this.name = name;
-        Object.freeze(this);
     }
 
     public toString(): string {

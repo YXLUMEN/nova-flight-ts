@@ -2,11 +2,8 @@ use crate::network::infrastructure::relay::{RelayInstance, RelaySecret, RelaySta
 use crate::network::wss::{RELAY_CELL, run_ws_server};
 use log::debug;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::net::TcpListener;
-use tokio::sync::{Mutex, OnceCell};
-
-static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new_with(AtomicBool::new(false));
+use tokio::sync::Mutex;
 
 #[tauri::command]
 pub async fn start_server(port: u16) -> Result<RelaySecret, String> {
@@ -46,19 +43,4 @@ pub async fn stop_server() -> bool {
         t.stop();
     }
     running
-}
-
-#[tauri::command]
-pub fn set_open(bl: bool) -> bool {
-    OPEN_FLAG.get().is_some_and(|flag| {
-        flag.store(bl, Ordering::SeqCst);
-        true
-    })
-}
-
-#[tauri::command]
-pub fn is_open() -> bool {
-    OPEN_FLAG
-        .get()
-        .is_some_and(|flag| flag.load(Ordering::SeqCst))
 }

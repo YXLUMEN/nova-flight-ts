@@ -19,6 +19,7 @@ pub(crate) const ACTIVE_ACK: u8 = 0x03;
 pub(crate) const QUERY: u8 = 0x04;
 pub(crate) const BAN_IP: u8 = 0x05;
 pub(crate) const UNBAN_IP: u8 = 0x06;
+pub(crate) const ACCEPT_CONN: u8 = 0x07;
 
 /// 中继回执,用于可翻译文本
 pub(crate) const DUPLICATE_SERVER: u8 = 0x00;

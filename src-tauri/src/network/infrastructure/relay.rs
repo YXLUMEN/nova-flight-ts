@@ -93,6 +93,7 @@ pub(crate) struct RelayState {
     active: DashMap<u8, ActiveClient>,
     banned: RwLock<AHashSet<IpAddr>>,
     shutting_down: AtomicBool,
+    opened: AtomicBool,
 }
 
 impl RelayState {
@@ -104,6 +105,7 @@ impl RelayState {
             active: DashMap::new(),
             banned: RwLock::new(AHashSet::new()),
             shutting_down: AtomicBool::new(false),
+            opened: AtomicBool::new(true),
         }
     }
 
@@ -213,6 +215,14 @@ impl RelayState {
     pub fn clear_clients(&self) {
         self.pending.clear();
         self.active.clear();
+    }
+
+    pub fn is_open(&self) -> bool {
+        self.opened.load(Ordering::Relaxed)
+    }
+
+    pub fn set_open(&self, open: bool) {
+        self.opened.store(open, Ordering::Release);
     }
 
     pub fn schedule_shutdown(&self) {
