@@ -6,36 +6,37 @@ import type {ParseResults} from "../../brigadier/ParseResults.ts";
 import type {Consumer} from "../../type/types.ts";
 import {debounce} from "../../utils/util.ts";
 import {CommandManager} from "../../command/CommandManager.ts";
-import {MusicCommand} from "../../command/MusicCommand.ts";
-import {DebugModeCommand} from "../../command/DebugModeCommand.ts";
-import {ClientSettingsCommand} from "../../command/ClientSettingsCommand.ts";
-import {CommandBarCommand} from "../../command/CommandBarCommand.ts";
+import {MusicCommand} from "../../command/cmd/MusicCommand.ts";
+import {DebugModeCommand} from "../../command/cmd/DebugModeCommand.ts";
+import {ClientSettingsCommand} from "../../command/cmd/ClientSettingsCommand.ts";
+import {CommandBarCommand} from "../../command/cmd/CommandBarCommand.ts";
 import {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
-import {KillCommand} from "../../command/KillCommand.ts";
-import {WorldDifficultCommand} from "../../command/WorldDifficultCommand.ts";
-import {StatusEffectCommand} from "../../command/StatusEffectCommand.ts";
+import {KillCommand} from "../../command/cmd/KillCommand.ts";
+import {WorldDifficultCommand} from "../../command/cmd/WorldDifficultCommand.ts";
+import {StatusEffectCommand} from "../../command/cmd/StatusEffectCommand.ts";
 import {ClientSuggestionPopup} from "./ClientSuggestionPopup.ts";
 import {ClientCommandPanel} from "./ClientCommandPanel.ts";
 import {MemoryLRU} from "../../utils/collection/MemoryLRU.ts";
 import {StringReader} from "../../brigadier/StringReader.ts";
-import {SummonEntityCommand} from "../../command/SummonEntityCommand.ts";
-import {StageCommand} from "../../command/StageCommand.ts";
-import {KickCommand} from "../../command/KickCommand.ts";
-import {GiveCommand} from "../../command/GiveCommand.ts";
-import {ScoreCommand} from "../../command/ScoreCommand.ts";
+import {SummonEntityCommand} from "../../command/cmd/SummonEntityCommand.ts";
+import {StageCommand} from "../../command/cmd/StageCommand.ts";
+import {KickCommand} from "../../command/cmd/KickCommand.ts";
+import {GiveCommand} from "../../command/cmd/GiveCommand.ts";
+import {ScoreCommand} from "../../command/cmd/ScoreCommand.ts";
 import {ClientStorage} from "../storage/ClientStorage.ts";
-import {LangCommand} from "../../command/LangCommand.ts";
-import {ClientFixCommand} from "../../command/ClientFixCommand.ts";
+import {LangCommand} from "../../command/cmd/LangCommand.ts";
+import {ClientFixCommand} from "../../command/cmd/ClientFixCommand.ts";
 import {Suggestions} from "../../brigadier/suggestion/Suggestions.ts";
-import {DamageCommand} from "../../command/DamageCommand.ts";
-import {SoundCommand} from "../../command/SoundCommand.ts";
-import {TickCommand} from "../../command/TickCommand.ts";
-import {RemoveCommand} from "../../command/RemoveCommand.ts";
+import {DamageCommand} from "../../command/cmd/DamageCommand.ts";
+import {SoundCommand} from "../../command/cmd/SoundCommand.ts";
+import {TickCommand} from "../../command/cmd/TickCommand.ts";
+import {RemoveCommand} from "../../command/cmd/RemoveCommand.ts";
 import {CommandBarProxy} from "../page/compound/CommandBarProxy.ts";
-import {ParticleCommand} from "../../command/ParticleCommand.ts";
-import {TechCommand} from "../../command/TechCommand.ts";
-import {BanCommand} from "../../command/BanCommand.ts";
-import {UnbanCommand} from "../../command/UnbanCommand.ts";
+import {ParticleCommand} from "../../command/cmd/ParticleCommand.ts";
+import {TechCommand} from "../../command/cmd/TechCommand.ts";
+import {BanCommand} from "../../command/cmd/BanCommand.ts";
+import {UnbanCommand} from "../../command/cmd/UnbanCommand.ts";
+import {LoginCommand} from "../../command/cmd/LoginCommand.ts";
 
 export class ClientCommandManager extends CommandManager implements EventListenerObject {
     private static readonly COMMAND_HISTORY_ID = 'history';
@@ -380,6 +381,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
         TechCommand.registry(this.dispatcher);
         BanCommand.registry(this.dispatcher);
         UnbanCommand.registry(this.dispatcher);
+        LoginCommand.registry(this.dispatcher);
     }
 
     public override executeWithPrefix(source: CommandSource, input: string): void {

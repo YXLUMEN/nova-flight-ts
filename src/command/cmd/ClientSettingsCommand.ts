@@ -1,19 +1,19 @@
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import {stopServer} from "../client/ipc/integrated_server.ts";
-import {isOpened, openOnLan} from "../client/ipc/lan_discovery.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {validateIpv4} from "../utils/address_util.ts";
-import {RuntimeConfig} from "../configs/RuntimeConfig.ts";
-import {CommandError, IllegalArgumentError} from "../type/errors.ts";
-import {IntArgumentType} from "./argument/IntArgumentType.ts";
-import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
-import {ServerStorage} from "../server/storage/ServerStorage.ts";
-import {NovaFlightClient} from "../client/NovaFlightClient.ts";
-import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
-import {Settings} from "../client/settings/Settings.ts";
-import {CommandUtil} from "./CommandUtil.ts";
-import {Log} from "../utils/Log.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {ClientCommandSource} from "../../client/command/ClientCommandSource.ts";
+import {stopServer} from "../../client/ipc/integrated_server.ts";
+import {isOpened, openOnLan} from "../../client/ipc/lan_discovery.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {validateIpv4} from "../../utils/address_util.ts";
+import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
+import {CommandError, IllegalArgumentError} from "../../type/errors.ts";
+import {IntArgumentType} from "../argument/IntArgumentType.ts";
+import {NormalStringArgumentType} from "../argument/NormalStringArgumentType.ts";
+import {ServerStorage} from "../../server/storage/ServerStorage.ts";
+import {NovaFlightClient} from "../../client/NovaFlightClient.ts";
+import {BoolArgumentType} from "../argument/BoolArgumentType.ts";
+import {Settings} from "../../client/settings/Settings.ts";
+import {CommandUtil} from "../CommandUtil.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -169,7 +169,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('reset_tutorial')
                                 .executes(async (ctx) => {
-                                    const result = await ServerStorage.db.delete('user_info', 'tutorial');
+                                    const result = await ServerStorage.DB.delete('user_info', 'tutorial');
                                     if (result.isOk()) {
                                         ctx.source.addMessage('Reset success');
                                         return;

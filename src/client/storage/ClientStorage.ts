@@ -1,7 +1,7 @@
 import {IndexedDBHelper} from "../../database/IndexedDBHelper.ts";
 
 export class ClientStorage {
-    public static db = new IndexedDBHelper('nova-flight-client', 6, [
+    public static db = new IndexedDBHelper('nova-flight-client', 7, [
         {
             name: 'server_addr_list',
             keyPath: 'id',
@@ -17,6 +17,10 @@ export class ClientStorage {
         {
             name: 'statistics',
             keyPath: 'item',
+        },
+        {
+            name: 'account',
+            keyPath: 'uuid',
         },
         {
             name: 'command_history',

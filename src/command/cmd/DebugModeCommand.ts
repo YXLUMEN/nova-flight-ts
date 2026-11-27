@@ -1,11 +1,11 @@
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {IllegalArgumentError} from "../type/errors.ts";
-import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
-import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
-import {PlayerProfileSyncS2CPacket} from "../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
-import {CommandUtil} from "./CommandUtil.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
+import {BoolArgumentType} from "../argument/BoolArgumentType.ts";
+import {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
+import {PlayerProfileSyncS2CPacket} from "../../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
+import {CommandUtil} from "../CommandUtil.ts";
 
 export class DebugModeCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

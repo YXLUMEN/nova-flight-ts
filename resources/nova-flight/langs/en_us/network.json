@@ -10,8 +10,12 @@
   "disconnect.invalid.session_id": "Invalid Session",
   "disconnect.promote.fail": "Session promotion failed",
   "disconnect.promote.timeout": "Session promotion timed out",
+  "disconnect.login.invalid_key": "Invalid login key",
+  "disconnect.login.unmatch": "Login passkey unmatch",
   "disconnect.still_loading": "Server is still starting",
   "disconnect.unmach.protocal": "Mismatched network protocol",
   "disconnect.unmach.game": "Incompatible game version. Required \"{}\" but current is \"{}\"",
-  "disconnect.move_too_fast": "Moved too fast"
+  "disconnect.move_too_fast": "Moved too fast",
+  "disconnect.overload": "Connect overload",
+  "baned": "Baned by server"
 }

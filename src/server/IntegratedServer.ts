@@ -23,6 +23,7 @@ import {ServerProperties} from "./ServerProperties.ts";
 import {ServerNetworkBus} from "./network/bus/ServerNetworkBus.ts";
 import {ServerEncryptNetBus} from "./network/bus/ServerEncryptNetBus.ts";
 import {SocketAddr} from "../network/SocketAddr.ts";
+import {WorldStorage} from "./storage/WorldStorage.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -75,7 +76,7 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     public override async readSave(): Promise<NbtCompound | null> {
-        const result = await ServerStorage.loadWorld(this.worldName);
+        const result = await WorldStorage.loadWorld(this.worldName);
         if (result.isOk()) return result.unwrap();
 
         const err = result.unwrapErr();
@@ -101,7 +102,7 @@ export class IntegratedServer extends NovaFlightServer {
             return;
         }
 
-        const result = await ServerStorage.updateWorld(this.profile.name, compound);
+        const result = await WorldStorage.updateWorld(this.profile.name, compound);
         if (result.isErr()) {
             Log.error(result.unwrapErr().message);
         }
@@ -130,10 +131,10 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     private async loadTutorial(): Promise<void> {
-        const isTutorial = await ServerStorage.db.get<string>('user_info', 'tutorial');
+        const isTutorial = await ServerStorage.DB.get<string>('user_info', 'tutorial');
         if (!this.world || isTutorial.isErr() || isTutorial.unwrap() !== null) return;
 
-        await ServerStorage.db.update('user_info', {name: 'tutorial'});
+        await ServerStorage.DB.update('user_info', {name: 'tutorial'});
 
         this.world.setStage(TUTORIAL_PHASES);
         new TutorialEvents(this);

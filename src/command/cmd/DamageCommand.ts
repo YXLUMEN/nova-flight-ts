@@ -1,19 +1,19 @@
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {CommandContext} from "../brigadier/context/CommandContext.ts";
-import type {Identifier} from "../registry/Identifier.ts";
-import type {World} from "../world/World.ts";
-import type {PosArgument} from "./argument/PosArgument.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {EntitySelector} from "./EntitySelector.ts";
-import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
-import {CommandError, IllegalArgumentError} from "../type/errors.ts";
-import {DoubleArgumentType} from "./argument/DoubleArgumentType.ts";
-import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
-import {CommandUtil} from "./CommandUtil.ts";
-import {Registries} from "../registry/Registries.ts";
-import {PosArgumentType} from "./argument/PosArgumentType.ts";
-import {DamageSource} from "../entity/damage/DamageSource.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {CommandContext} from "../../brigadier/context/CommandContext.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
+import type {World} from "../../world/World.ts";
+import type {PosArgument} from "../argument/PosArgument.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {EntitySelector} from "../EntitySelector.ts";
+import {EntitySelectorArgumentType} from "../argument/EntitySelectorArgumentType.ts";
+import {CommandError, IllegalArgumentError} from "../../type/errors.ts";
+import {DoubleArgumentType} from "../argument/DoubleArgumentType.ts";
+import {IdentifierArgumentType} from "../argument/IdentifierArgumentType.ts";
+import {CommandUtil} from "../CommandUtil.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {PosArgumentType} from "../argument/PosArgumentType.ts";
+import {DamageSource} from "../../entity/damage/DamageSource.ts";
 
 export class DamageCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

@@ -17,6 +17,7 @@ import {PlayerDataStorage} from "../../server/storage/PlayerDataStorage.ts";
 import {PageSection} from "../page/PageSection.ts";
 import {ArchiveInputBox} from "./ArchiveInputBox.ts";
 import {Log} from "../../utils/Log.ts";
+import {WorldStorage} from "../../server/storage/WorldStorage.ts";
 
 export class ClientSavesManager extends PageSection {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
@@ -62,7 +63,7 @@ export class ClientSavesManager extends PageSection {
     public async chooseSave(): Promise<string | null> {
         this.commit(null);
 
-        await ServerStorage.updateStatus();
+        await WorldStorage.updateStatus();
         await this.refreshSaveDisplay();
 
         const {promise, resolve} = Promise.withResolvers<string | null>();
@@ -146,7 +147,7 @@ export class ClientSavesManager extends PageSection {
     }
 
     private async refreshSaveDisplay(): Promise<void> {
-        const result = await ServerStorage.db.getAll<SaveMeta>('save_meta');
+        const result = await ServerStorage.DB.getAll<SaveMeta>('save_meta');
         if (result.isErr()) {
             const err = result.unwrapErr();
             const msg = `[Client] Error while read saves, ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}`;
@@ -181,7 +182,7 @@ export class ClientSavesManager extends PageSection {
         const saveName = await this.genSaveName(input);
         if (!saveName) return null;
 
-        const result = await ServerStorage.insertWorld(saveName);
+        const result = await WorldStorage.insertWorld(saveName);
         if (result.isErr()) {
             const err = result.unwrapErr();
             if (err.name === 'ConstraintError') {
@@ -202,10 +203,10 @@ export class ClientSavesManager extends PageSection {
     }
 
     private async genSaveName(saveName: string) {
-        const exist = await ServerStorage.db.exist('save_meta', saveName);
+        const exist = await ServerStorage.DB.exist('save_meta', saveName);
         if (exist.isOk() && !exist.unwrap()) return saveName;
 
-        const db = await ServerStorage.db.init();
+        const db = await ServerStorage.DB.init();
         const transaction = db.transaction('save_meta', 'readonly');
         const store = transaction.objectStore('save_meta');
 
@@ -263,7 +264,7 @@ export class ClientSavesManager extends PageSection {
             return;
         }
 
-        const result = await ServerStorage.db.get<SaveMeta>('save_meta', origin);
+        const result = await ServerStorage.DB.get<SaveMeta>('save_meta', origin);
         if (result.isErr()) {
             console.error(result.unwrapErr());
             await message('读取时出现错误', {kind: 'error'});
@@ -276,7 +277,7 @@ export class ClientSavesManager extends PageSection {
         }
 
         meta.display_name = name;
-        const isSuccess = await ServerStorage.db.update('save_meta', meta);
+        const isSuccess = await ServerStorage.DB.update('save_meta', meta);
         if (isSuccess.isErr()) {
             console.error(isSuccess.unwrapErr());
             await message('修改失败', {kind: 'error'});
@@ -303,7 +304,7 @@ export class ClientSavesManager extends PageSection {
             kind: 'warning',
         })) return;
 
-        const result = await ServerStorage.deleteWorld(saveName);
+        const result = await WorldStorage.deleteWorld(saveName);
         result
             .map(() => {
                 this.chosenItem?.remove();
@@ -323,7 +324,7 @@ export class ClientSavesManager extends PageSection {
             await mkdir(saveDir, {recursive: true});
 
             const worldPath = await join(saveDir, `world.dat`);
-            const result = await ServerStorage.loadWorld(saveName);
+            const result = await WorldStorage.loadWorld(saveName);
             if (result.isErr()) {
                 const msg = result.unwrapErr().message || '未找到存档';
                 await message(msg, {kind: 'warning'});
@@ -342,7 +343,7 @@ export class ClientSavesManager extends PageSection {
                 tasks.push(task);
             };
 
-            const io = new PlayerDataStorage(saveName, ServerStorage.db);
+            const io = new PlayerDataStorage(saveName, ServerStorage.DB);
             await io.loadPlayerNbtInWorld(feature);
             await Promise.all(tasks);
 
@@ -360,7 +361,7 @@ export class ClientSavesManager extends PageSection {
             await mkdir(saveDir, {recursive: true});
 
             const worldPath = await join(saveDir, `world.snbt`);
-            const result = await ServerStorage.loadWorld(saveName);
+            const result = await WorldStorage.loadWorld(saveName);
             if (result.isErr()) {
                 const msg = result.unwrapErr().message || '未找到存档';
                 await message(msg, {kind: 'warning'});
@@ -382,7 +383,7 @@ export class ClientSavesManager extends PageSection {
                 tasks.push(task);
             };
 
-            const io = new PlayerDataStorage(saveName, ServerStorage.db);
+            const io = new PlayerDataStorage(saveName, ServerStorage.DB);
             await io.loadPlayerInWorld(feature);
             await Promise.all(tasks);
 
@@ -443,7 +444,7 @@ export class ClientSavesManager extends PageSection {
             }
         };
 
-        const io = new PlayerDataStorage(saveName, ServerStorage.db);
+        const io = new PlayerDataStorage(saveName, ServerStorage.DB);
         for (const fullPath of results.files) {
             const path = fullPath.split(/[\\/]/).pop();
             if (!path) continue;
@@ -461,7 +462,7 @@ export class ClientSavesManager extends PageSection {
                 const compound = await parseNbt(fullPath, path, fileName, ext);
                 if (compound === null) break;
 
-                const saveResult = await ServerStorage.updateWorld(saveName, compound);
+                const saveResult = await WorldStorage.updateWorld(saveName, compound);
                 if (saveResult.isErr()) {
                     failTasks.push({path, reason: saveResult.unwrapErr().message});
                     console.error(saveResult.unwrapErr());

@@ -10,6 +10,7 @@ import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 import {WebSocketBus} from "../../../network/WebSocketBus.ts";
 
 export abstract class ServerCommonHandler implements PacketListener {
+    public static readonly INTERNAL_ERROR = 'network.disconnect.internal';
     public static readonly LOGOUT = 'network.disconnect.logout';
     public static readonly ILLEGAL_CHARACTER = 'network.disconnect.illegal_character';
     public static readonly INVALID_STATE = 'network.disconnect.invalid.state';

@@ -1,14 +1,14 @@
-import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {CommandContext} from "../brigadier/context/CommandContext.ts";
-import type {ClientWorld} from "../client/ClientWorld.ts";
-import type {Identifier} from "../registry/Identifier.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
-import {CommandUtil} from "./CommandUtil.ts";
-import {Registries} from "../registry/Registries.ts";
-import {CommandError} from "../type/errors.ts";
-import {IntArgumentType} from "./argument/IntArgumentType.ts";
+import type {ClientCommandSource} from "../../client/command/ClientCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {CommandContext} from "../../brigadier/context/CommandContext.ts";
+import type {ClientWorld} from "../../client/ClientWorld.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {IdentifierArgumentType} from "../argument/IdentifierArgumentType.ts";
+import {CommandUtil} from "../CommandUtil.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {CommandError} from "../../type/errors.ts";
+import {IntArgumentType} from "../argument/IntArgumentType.ts";
 
 export class ParticleCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {

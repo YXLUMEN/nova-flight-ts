@@ -1,8 +1,8 @@
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {IntArgumentType} from "./argument/IntArgumentType.ts";
-import {CommandError} from "../type/errors.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {IntArgumentType} from "../argument/IntArgumentType.ts";
+import {CommandError} from "../../type/errors.ts";
 
 export class TickCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

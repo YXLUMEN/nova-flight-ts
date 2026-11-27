@@ -1,9 +1,9 @@
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {ServerWorld} from "../server/ServerWorld.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
-import {CommandUtil} from "./CommandUtil.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {NormalStringArgumentType} from "../argument/NormalStringArgumentType.ts";
+import {CommandUtil} from "../CommandUtil.ts";
 
 export class StageCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

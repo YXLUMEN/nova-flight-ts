@@ -1,5 +1,4 @@
 import type {Predicate} from "../type/types.ts";
-import {validateIpv4} from "../utils/address_util.ts";
 import {Options} from "../database/settings/Options.ts";
 import {ServerOptionStorage} from "./storage/ServerOptionStorage.ts";
 import {SettingItem} from "../database/settings/SettingItem.ts";
@@ -17,32 +16,26 @@ export class ServerProperties {
     public static readonly MAX_PLAYERS = this.item<number>(
         'max_players',
         5,
-        SettingPredicates.clampInt(1, 32)
+        SettingPredicates.clampInt(1, 32),
     );
 
     public static readonly PLAYER_AFK_TIMEOUT = this.item<number>(
         'player_afk_timeout',
         20_000,
-        SettingPredicates.clampInt(10_000, 600_000)
-    );
-
-    // 在内置服务器中无效
-    public static readonly SERVER_HOST = this.item<string>(
-        'server_host',
-        '127.0.0.1',
-        validateIpv4
-    );
-
-    public static readonly SERVER_PORT = this.item<number>(
-        'server_port',
-        25566,
-        SettingPredicates.clampInt(0, 65535)
+        SettingPredicates.clampInt(10_000, 600_000),
     );
 
     public static readonly ENCRYPT_CHANNEL = this.item<boolean>(
         'encrypt_channel',
         false,
-        SettingPredicates.isBool
+        SettingPredicates.isBool,
+    );
+
+    // 需要启动加密通道
+    public static readonly PLAYER_VERIFY = this.item<boolean>(
+        'player_verify',
+        false,
+        SettingPredicates.isBool,
     );
 
     private static item<T>(

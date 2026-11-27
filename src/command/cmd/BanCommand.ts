@@ -1,13 +1,13 @@
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {validateIpv4} from "../utils/address_util.ts";
-import {isClient} from "../configs/RuntimeConfig.ts";
-import {CommandUtil} from "./CommandUtil.ts";
-import {IllegalArgumentError} from "../type/errors.ts";
-import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
-import {RelayActionBuilder} from "../server/network/RelayActionBuilder.ts";
-import {PlayerSelectorArgumentType} from "./argument/PlayerSelectorArgumentType.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {validateIpv4} from "../../utils/address_util.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
+import {CommandUtil} from "../CommandUtil.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
+import {NormalStringArgumentType} from "../argument/NormalStringArgumentType.ts";
+import {RelayActionBuilder} from "../../server/network/RelayActionBuilder.ts";
+import {PlayerSelectorArgumentType} from "../argument/PlayerSelectorArgumentType.ts";
 
 export class BanCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

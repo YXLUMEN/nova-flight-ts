@@ -1,10 +1,10 @@
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {CommandError} from "../type/errors.ts";
-import {PlayerSelectorArgumentType} from "./argument/PlayerSelectorArgumentType.ts";
-import {CommandUtil} from "./CommandUtil.ts";
-import {isClient} from "../configs/RuntimeConfig.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {CommandError} from "../../type/errors.ts";
+import {PlayerSelectorArgumentType} from "../argument/PlayerSelectorArgumentType.ts";
+import {CommandUtil} from "../CommandUtil.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class KickCommand {
     private static readonly KICK = 'network.disconnect.kicked';

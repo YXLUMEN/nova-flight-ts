@@ -1,14 +1,14 @@
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {EntitySelector} from "./EntitySelector.ts";
-import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
-import type {Identifier} from "../registry/Identifier.ts";
-import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
-import {CommandError} from "../type/errors.ts";
-import {Registries} from "../registry/Registries.ts";
-import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
-import {CommandUtil} from "./CommandUtil.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {EntitySelector} from "../EntitySelector.ts";
+import {EntitySelectorArgumentType} from "../argument/EntitySelectorArgumentType.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
+import {IdentifierArgumentType} from "../argument/IdentifierArgumentType.ts";
+import {CommandError} from "../../type/errors.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
+import {CommandUtil} from "../CommandUtil.ts";
 
 export class RemoveCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

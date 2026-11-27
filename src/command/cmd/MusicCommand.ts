@@ -1,19 +1,19 @@
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {CommandContext} from "../brigadier/context/CommandContext.ts";
-import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
-import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
-import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import type {Identifier} from "../registry/Identifier.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {AudioManager} from "../sound/AudioManager.ts";
-import {Registries} from "../registry/Registries.ts";
-import {BGMManager} from "../sound/BGMManager.ts";
-import {CommandError} from "../type/errors.ts";
-import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
-import {CommandUtil} from "./CommandUtil.ts";
-import {DoubleArgumentType} from "./argument/DoubleArgumentType.ts";
-import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
-import {Settings} from "../client/settings/Settings.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {CommandContext} from "../../brigadier/context/CommandContext.ts";
+import type {SuggestionsBuilder} from "../../brigadier/suggestion/SuggestionsBuilder.ts";
+import type {Suggestions} from "../../brigadier/suggestion/Suggestions.ts";
+import type {ClientCommandSource} from "../../client/command/ClientCommandSource.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {AudioManager} from "../../sound/AudioManager.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {BGMManager} from "../../sound/BGMManager.ts";
+import {CommandError} from "../../type/errors.ts";
+import {IdentifierArgumentType} from "../argument/IdentifierArgumentType.ts";
+import {CommandUtil} from "../CommandUtil.ts";
+import {DoubleArgumentType} from "../argument/DoubleArgumentType.ts";
+import {BoolArgumentType} from "../argument/BoolArgumentType.ts";
+import {Settings} from "../../client/settings/Settings.ts";
 
 export class MusicCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {

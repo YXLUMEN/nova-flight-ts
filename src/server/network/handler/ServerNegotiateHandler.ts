@@ -2,6 +2,7 @@ import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 import type {PubKeyC2SPacket} from "../../../network/packet/negotiate/PubKeyC2SPacket.ts";
 import type {ClientStartConfigC2SPacket} from "../../../network/packet/negotiate/ClientStartConfigC2SPacket.ts";
+import {wrapKey} from "../../../network/crypto/GCMHelper.ts";
 import {GCMScope} from "../../../network/crypto/GCMScope.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
 import {ConnectionState} from "../ConnectionState.ts";
@@ -16,8 +17,7 @@ import {ServerAllowConfigS2CPacket} from "../../../network/packet/negotiate/Serv
 import {ServerEncryptNetBus} from "../bus/ServerEncryptNetBus.ts";
 import {NonceGenerator} from "../../../network/crypto/NonceGenerator.ts";
 import {GCMSession} from "../../../network/crypto/GCMSession.ts";
-import {wrapKey} from "../../../network/crypto/GCMHelper.ts";
-
+import {ServerProperties} from "../../ServerProperties.ts";
 
 const GEN_KEY_FAIL = 'network.disconnect.fail.session_key';
 
@@ -40,6 +40,11 @@ export class ServerNegotiateHandler extends ServerCommonHandler {
             this.group = bus.getGroupKey();
             this.keyGenerator = bus.agreement;
         }
+    }
+
+    public override onDisconnected() {
+        super.onDisconnected();
+        this.state = NegotiateState.CANCEL;
     }
 
     public async startNegotiate() {
@@ -100,6 +105,7 @@ export class ServerNegotiateHandler extends ServerCommonHandler {
     public onClientPromoteToConfig(_: ClientStartConfigC2SPacket) {
         if (this.isInvalid(NegotiateState.FINISH)) return;
 
+        let canVerify = false;
         const bus = this.server.networkBus;
         if (bus instanceof ServerEncryptNetBus) {
             if (!this.session) {
@@ -109,10 +115,13 @@ export class ServerNegotiateHandler extends ServerCommonHandler {
             const channel = new EncryptSessionChannel(bus, this.session, this.connection.sid);
             this.connection.channelActive(channel);
 
+            if (ServerProperties.PLAYER_VERIFY.get()) {
+                canVerify = true;
+            }
             console.log(`Channel "${this.connection.sid}" encrypted`);
         }
 
-        const config = new ServerConfigHandler(this.server, this.connection, this.profile);
+        const config = new ServerConfigHandler(this.server, this.connection, this.profile, canVerify);
         this.connection.cleanReceived();
         this.connection.setInbound(ConfigProtocols.CLIENT_BOUND, config);
         this.connection.setOutBound(ConfigProtocols.SERVER_BOUND);
@@ -139,4 +148,5 @@ const enum NegotiateState {
     PENDING_IMPORT,
     PROTOCOL_SWITCHING,
     FINISH,
+    CANCEL,
 }

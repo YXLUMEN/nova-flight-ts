@@ -1,16 +1,16 @@
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {Identifier} from "../registry/Identifier.ts";
-import type {CommandContext} from "../brigadier/context/CommandContext.ts";
-import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
-import type {Tech} from "../world/tech/Tech.ts";
-import type {EntitySelector} from "./EntitySelector.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
-import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
-import {CommandUtil} from "./CommandUtil.ts";
-import {Registries} from "../registry/Registries.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
+import type {CommandContext} from "../../brigadier/context/CommandContext.ts";
+import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
+import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {Tech} from "../../world/tech/Tech.ts";
+import type {EntitySelector} from "../EntitySelector.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {EntitySelectorArgumentType} from "../argument/EntitySelectorArgumentType.ts";
+import {IdentifierArgumentType} from "../argument/IdentifierArgumentType.ts";
+import {CommandUtil} from "../CommandUtil.ts";
+import {Registries} from "../../registry/Registries.ts";
 
 export class TechCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

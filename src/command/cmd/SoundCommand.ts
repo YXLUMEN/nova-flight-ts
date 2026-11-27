@@ -1,11 +1,11 @@
-import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import type {Identifier} from "../registry/Identifier.ts";
-import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
-import {CommandError} from "../type/errors.ts";
-import {Registries} from "../registry/Registries.ts";
-import {CommandUtil} from "./CommandUtil.ts";
+import type {ClientCommandSource} from "../../client/command/ClientCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
+import {IdentifierArgumentType} from "../argument/IdentifierArgumentType.ts";
+import {CommandError} from "../../type/errors.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {CommandUtil} from "../CommandUtil.ts";
 
 export class SoundCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {

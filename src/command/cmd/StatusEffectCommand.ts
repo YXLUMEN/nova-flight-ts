@@ -1,18 +1,18 @@
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {UUID} from "../type/types.ts";
-import type {CommandContext} from "../brigadier/context/CommandContext.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {CommandError, IllegalArgumentError} from "../type/errors.ts";
-import {Identifier} from "../registry/Identifier.ts";
-import {Registries} from "../registry/Registries.ts";
-import {LivingEntity} from "../entity/LivingEntity.ts";
-import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
-import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
-import {IntArgumentType} from "./argument/IntArgumentType.ts";
-import {EntitySelector} from "./EntitySelector.ts";
-import {CommandUtil} from "./CommandUtil.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {UUID} from "../../type/types.ts";
+import type {CommandContext} from "../../brigadier/context/CommandContext.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {CommandError, IllegalArgumentError} from "../../type/errors.ts";
+import {Identifier} from "../../registry/Identifier.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {LivingEntity} from "../../entity/LivingEntity.ts";
+import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
+import {EntitySelectorArgumentType} from "../argument/EntitySelectorArgumentType.ts";
+import {IdentifierArgumentType} from "../argument/IdentifierArgumentType.ts";
+import {IntArgumentType} from "../argument/IntArgumentType.ts";
+import {EntitySelector} from "../EntitySelector.ts";
+import {CommandUtil} from "../CommandUtil.ts";
 
 export class StatusEffectCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

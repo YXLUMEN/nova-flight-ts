@@ -30,7 +30,7 @@ export class PlayerManager {
 
     public constructor(server: NovaFlightServer) {
         this.server = server;
-        this.playerIo = new PlayerDataStorage(this.server.worldName, ServerStorage.db);
+        this.playerIo = new PlayerDataStorage(this.server.worldName, ServerStorage.DB);
     }
 
     public placePlayer(

@@ -12,6 +12,8 @@
   "disconnect.invalid.session_id": "不合法的 Session",
   "disconnect.promote.fail": "会话提升失败",
   "disconnect.promote.timeout": "会话提升超时",
+  "disconnect.login.invalid_key": "登录密钥格式错误",
+  "disconnect.login.unmatch": "登录密钥错误",
   "disconnect.still_loading": "服务器正在启动",
   "disconnect.unmach.protocal": "不匹配的网络协议",
   "disconnect.unmach.game": "不兼容的游戏版本,需要 \"{}\" 但当前为 \"{}\"",

@@ -1,12 +1,12 @@
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {ServerWorld} from "../server/ServerWorld.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {validateIpv4} from "../utils/address_util.ts";
-import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
-import {CommandUtil} from "./CommandUtil.ts";
-import {IllegalArgumentError} from "../type/errors.ts";
-import {RelayActionBuilder} from "../server/network/RelayActionBuilder.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import {validateIpv4} from "../../utils/address_util.ts";
+import {NormalStringArgumentType} from "../argument/NormalStringArgumentType.ts";
+import {CommandUtil} from "../CommandUtil.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
+import {RelayActionBuilder} from "../../server/network/RelayActionBuilder.ts";
 
 export class UnbanCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

@@ -1,6 +1,6 @@
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import {literal} from "../brigadier/builder/CommandNodeBuilder.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {ClientCommandSource} from "../../client/command/ClientCommandSource.ts";
+import {literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
 import {resolveResource} from "@tauri-apps/api/path";
 import {writeTextFile} from "@tauri-apps/plugin-fs";
 

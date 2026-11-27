@@ -1,24 +1,24 @@
-import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import type {Identifier} from "../registry/Identifier.ts";
-import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
-import {CommandUtil} from "./CommandUtil.ts";
-import {Registries} from "../registry/Registries.ts";
-import {CommandError, IllegalArgumentError, IllegalStateError} from "../type/errors.ts";
-import type {Entity} from "../entity/Entity.ts";
-import type {PosArgument} from "./argument/PosArgument.ts";
-import {PosArgumentType} from "./argument/PosArgumentType.ts";
-import type {CommandContext} from "../brigadier/context/CommandContext.ts";
-import {EntityTypes} from "../entity/EntityTypes.ts";
-import {IntArgumentType} from "./argument/IntArgumentType.ts";
-import type {EntityType} from "../entity/EntityType.ts";
-import {NbtCompoundArgumentType} from "./argument/NbtCompoundArgumentType.ts";
-import {NbtCompound} from "../nbt/element/NbtCompound.ts";
-import type {Vec2} from "../utils/math/Vec2.ts";
-import {isDev} from "../configs/RuntimeConfig.ts";
-import type {World} from "../world/World.ts";
-import type {Consumer} from "../type/types.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
+import {IdentifierArgumentType} from "../argument/IdentifierArgumentType.ts";
+import {CommandUtil} from "../CommandUtil.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {CommandError, IllegalArgumentError, IllegalStateError} from "../../type/errors.ts";
+import type {Entity} from "../../entity/Entity.ts";
+import type {PosArgument} from "../argument/PosArgument.ts";
+import {PosArgumentType} from "../argument/PosArgumentType.ts";
+import type {CommandContext} from "../../brigadier/context/CommandContext.ts";
+import {EntityTypes} from "../../entity/EntityTypes.ts";
+import {IntArgumentType} from "../argument/IntArgumentType.ts";
+import type {EntityType} from "../../entity/EntityType.ts";
+import {NbtCompoundArgumentType} from "../argument/NbtCompoundArgumentType.ts";
+import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
+import {isDev} from "../../configs/RuntimeConfig.ts";
+import type {World} from "../../world/World.ts";
+import type {Consumer} from "../../type/types.ts";
 
 export class SummonEntityCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
