@@ -63,6 +63,15 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
         this.thenSend(this.encryptExclude(this.group!, writer, excludes));
     }
 
+    public override action(buf: Uint8Array<ArrayBuffer>) {
+        if (!this.isConnected()) return;
+        if (buf[0] !== PacketHeader.SERVER_ACTION) {
+            throw new TypeError('Relay action packet must start with 0xFF');
+        }
+        // 让控制帧保序,以满足会话屏障
+        this.thenSend(Promise.resolve(buf));
+    }
+
     public thenSend(task: Promise<Uint8Array<ArrayBuffer>>) {
         const next = this.tail.then(async () => {
             const buffer = await task;

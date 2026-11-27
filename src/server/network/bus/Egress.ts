@@ -7,9 +7,9 @@ export interface Egress {
     /** 立刻安排广播 */
     broadcast(payload: Payload): void;
 
-    /** 同步发送数据帧 */
+    /** 立刻安排发送数据帧 */
     sendFrame(frame: Uint8Array<ArrayBuffer>): void;
 
-    /** 同步发送控制帧. 连接关闭时无效 */
+    /** 立刻安排发送控制帧. 连接关闭时无效 */
     action(frame: Uint8Array<ArrayBuffer>): void;
 }
