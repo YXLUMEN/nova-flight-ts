@@ -5,17 +5,17 @@ use std::time::Duration;
 pub(crate) const MAX_PAYLOAD_LEN: usize = 6176; // 6 KB upper bound for a single frame, with 32B pad
 pub(crate) const MAX_EXCLUDES: u32 = 16; // exclude uuid count
 pub(crate) const MAX_BACKOFF: Duration = Duration::from_secs(5);
-pub(crate) const MAX_SESSION: u8 = 64; // u8 session id space upper bound with margin
+pub(crate) const MAX_SESSION: u8 = 128; // u8 session id space upper bound with margin
 pub(crate) const MAX_CONNECTION: u16 = 1024;
 
-pub trait Payload {
+pub(crate) trait Payload {
     const PAYLOAD_TYPE: u8;
     fn to_bytes(&self) -> Bytes {
         Bytes::from_static(&[0x00, Self::PAYLOAD_TYPE])
     }
 }
 
-pub struct Detached {
+pub(crate) struct Detached {
     pub sid: u8,
 }
 impl Payload for Detached {
@@ -26,7 +26,7 @@ impl Payload for Detached {
     }
 }
 
-pub struct Attached {
+pub(crate) struct Attached {
     pub sid: u8,
 }
 impl Payload for Attached {
@@ -40,7 +40,7 @@ impl Payload for Attached {
 
 /// 区别于 Attached,
 /// 这是给服务端的通知
-pub struct ClientAttached<'a> {
+pub(crate) struct ClientAttached<'a> {
     pub token: u32,
     pub host: &'a Ipv4Addr,
 }
@@ -59,8 +59,9 @@ impl Payload for ClientAttached<'_> {
     }
 }
 
-pub struct ClientActive<'a> {
+pub(crate) struct ClientActive<'a> {
     pub sid: u8,
+    pub token: u32,
     pub address: &'a SocketAddrV4,
 }
 
@@ -74,14 +75,15 @@ impl Payload for ClientActive<'_> {
         bytes[..4].copy_from_slice(&self.address.ip().octets());
         bytes[4..6].copy_from_slice(&self.address.port().to_le_bytes());
 
-        let mut buf = BytesMut::with_capacity(9);
+        let mut buf = BytesMut::with_capacity(13);
         buf.put_slice(&header);
+        buf.put_u32_le(self.token);
         buf.put_slice(&bytes);
         buf.freeze()
     }
 }
 
-pub struct RelayMessage<'a> {
+pub(crate) struct RelayMessage<'a> {
     code: u8,
     args: Option<&'a [&'a str]>,
 }
@@ -140,7 +142,7 @@ impl Payload for RelayMessage<'_> {
 
 /// Server 查询当前在线客户端列表的回包
 /// 格式: [0x00][0x04][count u8]([session_id u8])*
-pub struct QueryClientsResult {
+pub(crate) struct QueryClientsResult {
     /// (session_id, uuid) 对列表
     pub clients: Vec<u8>,
 }

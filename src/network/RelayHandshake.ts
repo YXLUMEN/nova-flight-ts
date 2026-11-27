@@ -57,7 +57,7 @@ export class RelayHandshake {
 
         const reader = new BinaryReader(buf);
         reader.readUint8();
-        const payload = RelayProtocols.SERVER.codec.decode(reader);
+        const payload = RelayProtocols.RELAY.codec.decode(reader);
         if (payload instanceof Detached) {
             fail(`[${this.side}] Ticked by relay`);
             return;

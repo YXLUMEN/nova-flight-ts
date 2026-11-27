@@ -6,7 +6,7 @@ import {RelayMessage} from "../packet/relay/RelayMessage.ts";
 import {ClientActive} from "../packet/relay/ClientActive.ts";
 
 export class RelayProtocols {
-    public static readonly SERVER = ProtocolInfoBuilder.relayBound(
+    public static readonly RELAY = ProtocolInfoBuilder.relayBound(
         builder => builder
             .add(Detached.ID, Detached.CODEC) // 0x00
             .add(Attached.ID, Attached.CODEC) // 0x01

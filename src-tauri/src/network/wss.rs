@@ -33,7 +33,7 @@ pub async fn run_ws_server(
     mut stop: oneshot::Receiver<()>,
 ) {
     let mut backoff = Duration::from_millis(100);
-    let mut consecutive_errors = 0u32;
+    let mut consecutive_errors = 0u8;
 
     loop {
         tokio::select! {
@@ -77,8 +77,7 @@ pub async fn run_ws_server(
                             continue;
                         }
 
-                        let state = state.clone();
-                        tokio::spawn(async move { handle_connection(stream, addrv4, state).await; });
+                        tokio::spawn(handle_connection(stream, addrv4, state.clone()));
                     }
                     Err(e) => {
                         error!("Accept error: {}", e);
@@ -286,6 +285,8 @@ async fn attach_client(
     addr: &SocketAddrV4,
     incoming: Bytes,
 ) -> Result<RoleContext, RegisterError> {
+    use crate::network::infrastructure::session::PendingAdmission;
+
     if incoming.len() != 17 {
         send_code(&tx, INVALID_REGISTER_PACKET);
         return Err(RegisterError::InvalidPacket);
@@ -307,19 +308,27 @@ async fn attach_client(
             Err(RegisterError::DuplicateClient)
         }
         Entry::Vacant(v) => {
-            let (permit_tx, permit_rx) = oneshot::channel::<()>();
-            let (close_tx, close_rx) = oneshot::channel::<()>();
-            let pending = PendingClient::new(tx, permit_tx, close_tx);
-            v.insert(pending);
+            let (client, session) = PendingClient::create(tx, token);
+            // lock release here
+            // change sequence of acquire lock may cost deadlock, must check it
+            v.insert(client);
 
-            // notice the server
-            if let Some(server) = state.get_server().await {
-                let attached = ClientAttached {
-                    token,
-                    host: &addr.ip(),
-                };
-                send_timeout(&server.tx, attached, Duration::from_secs(2)).await;
-            }
+            let mut adm = PendingAdmission::take(state, token);
+            // server not exist, registry never success
+            let server = state
+                .get_server()
+                .await
+                .ok_or(RegisterError::ServerNotExist)?;
+
+            let attached = ClientAttached {
+                token,
+                host: &addr.ip(),
+            };
+            // if failed, server never know new client
+            send_timeout(&server.tx, attached, Duration::from_secs(2))
+                .await
+                .ok_or(RegisterError::Timeout)?;
+            adm.settle();
 
             debug!(
                 "Client \"{}\" registered from \"{}\"",
@@ -327,11 +336,7 @@ async fn attach_client(
                 &addr
             );
 
-            Ok(RoleContext::Client(PendingSession {
-                token,
-                allow: permit_rx,
-                close: close_rx,
-            }))
+            Ok(RoleContext::Client(session))
         }
     }
 }
@@ -371,21 +376,13 @@ async fn play_client(
     address: &SocketAddrV4,
     reader: SplitStream<WebSocketStream<TcpStream>>,
 ) -> Option<u8> {
-    use crate::network::infrastructure::session::Admission;
-    use tokio::time::sleep;
+    use crate::network::infrastructure::session::PendingAdmission;
 
     let token = pending.token;
-    let mut adm = Admission::take(state, token);
-    let allowed = tokio::select! {
-        _ = &mut pending.allow => true,
-        _ = &mut pending.close => false,
-        _ = sleep(Duration::from_secs(4)) => false,
-    };
+    let mut adm = PendingAdmission::take(state, token);
+    pending.wait_permit().await.then_some(())?;
 
-    debug!("Client \"{}\" released {}", token, allowed);
-    if !allowed {
-        return None;
-    }
+    debug!("Client \"{}\" released", token);
 
     let sid = NEXT_SESSION_ID.alloc()?;
     // server must exist
@@ -395,20 +392,26 @@ async fn play_client(
 
     // notice server before active session
     // mustn't drop the active packet, because the relay has no means to remove that record, yet.
-    let active = ClientActive { sid, address };
+    let active = ClientActive {
+        sid,
+        token,
+        address,
+    };
     let success = send_timeout(&server.tx, active, Duration::from_secs(2)).await;
     if !success {
         return Some(sid);
     }
 
+    // make sure server clean old sid.
+    // after this, new session will not receive old session's flying message
+    let ack = pending.wait_ack(sid).await;
+    if !ack {
+        return Some(sid);
+    }
+
     // try upgrade session.
-    let session = match state.upgrade(sid, token) {
-        Ok(s) => s,
-        Err(e) => {
-            debug!("pending \"{}\" {}", token, e);
-            // only upgrade success will return session, so no need to clean active record.
-            return Some(sid);
-        }
+    let Some(session) = state.upgrade(sid, token) else {
+        return Some(sid);
     };
     adm.settle();
     drop(adm);

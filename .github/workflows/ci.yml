@@ -109,6 +109,10 @@ jobs:
       - name: cargo check
         run: cargo check --locked --manifest-path src-tauri/Cargo.toml
 
+      # 单元测试在 lib 里(含 action 分发表与协议解析), 不带 --lib 会额外构建 bin
+      - name: cargo test
+        run: cargo test --locked --lib --manifest-path src-tauri/Cargo.toml
+
       # 非阻塞: 便于渐进式统一代码风格, 习惯后可去掉 continue-on-error
       - name: cargo fmt 检查(非阻塞)
         continue-on-error: true

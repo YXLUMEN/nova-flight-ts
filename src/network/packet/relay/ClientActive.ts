@@ -11,17 +11,20 @@ export class ClientActive implements RelayPayload {
         empty,
         reader => new ClientActive(
             reader.readUint8(),
+            reader.readUint32(),
             PacketCodecs.IPV4.decode(reader),
             reader.readUint16(),
         )
     );
 
     public readonly sid: number;
+    public readonly token: number;
     public readonly host: string;
     public readonly port: number;
 
-    private constructor(sid: number, host: string, port: number) {
+    private constructor(sid: number, token: number, host: string, port: number) {
         this.sid = sid;
+        this.token = token;
         this.host = host;
         this.port = port;
     }

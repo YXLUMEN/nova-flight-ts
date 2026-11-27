@@ -22,6 +22,9 @@ import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
 import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 
+const ITEM_DATA = 'void_engine_invulnerable';
+const ENTITY_TAG = 'in_void';
+
 export class VoidEnginWeapon extends SpecialWeapon {
     public static readonly DEFAULT_MODIFIER = new AttributeModifier(
         Identifier.ofVanilla('weapon.into_void'),
@@ -43,9 +46,10 @@ export class VoidEnginWeapon extends SpecialWeapon {
         if (!(attacker instanceof PlayerEntity)) return;
 
         const data = stack.getOr(DataComponents.CUSTOM_DATA, new NbtCompound());
-        data.setBoolean('void_engine_invulnerable', attacker.invulnerable);
+        data.setBoolean(ITEM_DATA, attacker.invulnerable);
         stack.set(DataComponents.CUSTOM_DATA, data);
         attacker.invulnerable = true;
+        attacker.addTag(ENTITY_TAG);
 
         const modifier = stack.getOr(
             DataComponents.ATTRIBUTE_MODIFIERS,
@@ -168,12 +172,13 @@ export class VoidEnginWeapon extends SpecialWeapon {
 
         const data = stack.get(DataComponents.CUSTOM_DATA);
         if (data) {
-            attacker.invulnerable = data.getBoolean('void_engine_invulnerable');
-            data.remove('void_engine_invulnerable');
+            attacker.invulnerable = data.getBoolean(ITEM_DATA);
+            data.remove(ITEM_DATA);
             if (data.size() === 0) stack.remove(DataComponents.CUSTOM_DATA);
         } else {
             attacker.invulnerable = false;
         }
+        attacker.removeTag(ENTITY_TAG);
 
         const range = stack.getOr(DataComponents.EFFECT_RANGE, 32);
         const box = attacker.getBoundingBox().expandAll(range);

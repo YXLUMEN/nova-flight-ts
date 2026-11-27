@@ -159,6 +159,10 @@ export abstract class PlayerEntity extends LivingEntity {
         this.setYaw(-1.57079);
     }
 
+    public override isPushAble(): boolean {
+        return super.isPushAble() && !this.getTags().has('in_void');
+    }
+
     private clearAttributeModifier() {
         for (const [_, instance] of this.getAttributes().iter()) {
             instance.clearModifiers();

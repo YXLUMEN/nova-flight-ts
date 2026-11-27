@@ -34,10 +34,10 @@ pub async fn start_server(port: u16) -> Result<RelaySecret, String> {
 }
 
 #[tauri::command]
-pub async fn stop_server() -> Result<bool, ()> {
+pub async fn stop_server() -> bool {
     let Some(state_cell) = RELAY_CELL.get() else {
         debug!("Server not initialized");
-        return Ok(false);
+        return false;
     };
 
     let mut guard = state_cell.lock().await;
@@ -45,7 +45,7 @@ pub async fn stop_server() -> Result<bool, ()> {
     if let Some(t) = guard.as_mut() {
         t.stop();
     }
-    Ok(running)
+    running
 }
 
 #[tauri::command]

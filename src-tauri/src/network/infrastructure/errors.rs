@@ -10,6 +10,7 @@ pub(crate) enum RegisterError {
     EmptyPacket,
     InvalidPacket,
     UuidNil,
+    ServerNotExist,
     // 正常业务拒绝
     DuplicateClient,
     DuplicateServer,
@@ -24,7 +25,7 @@ impl RegisterError {
         use RegisterError::*;
         match self {
             Timeout | ChannelClosed | NotRegisterPacket | EmptyPacket | InvalidPacket | UuidNil
-            | SecretBurnout => Level::Debug,
+            | ServerNotExist | SecretBurnout => Level::Debug,
             DuplicateClient => Level::Info,
             DuplicateServer | SecretMismatch => Level::Warn,
             Internal(_) => Level::Error,
@@ -42,6 +43,7 @@ impl fmt::Display for RegisterError {
             EmptyPacket => "empty register packet",
             InvalidPacket => "invalid register packet",
             UuidNil => "client uuid is nil",
+            ServerNotExist => "server not exist",
             DuplicateClient => "duplicate client uuid",
             DuplicateServer => "server already exists",
             SecretMismatch => "server secret mismatch",

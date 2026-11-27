@@ -113,9 +113,9 @@ mod tests {
         let alloc = SessionAllocator::new();
         let id = alloc.alloc().unwrap();
         alloc.dealloc(id);
-        alloc.dealloc(id); // 必须无害
+        alloc.dealloc(id); // must be harmless
         assert_eq!(alloc.alloc(), Some(id));
-        assert_eq!(alloc.alloc(), Some(2), "没有把同一个 sid 发两次");
+        assert_eq!(alloc.alloc(), Some(2), "Not sending the same SID twice");
     }
 
     #[test]
@@ -125,7 +125,7 @@ mod tests {
         alloc.dealloc(RESERVED_HIGH);
 
         let ids: Vec<u8> = std::iter::from_fn(|| alloc.alloc()).collect();
-        assert_eq!(ids.len(), 254, "保留位仍然不可分配");
+        assert_eq!(ids.len(), 254, "Reserved space is still unallocated");
     }
 
     #[test]
@@ -162,6 +162,6 @@ mod tests {
 
         let unique: HashSet<u8> = all.iter().copied().collect();
         assert_eq!(all.len(), 254);
-        assert_eq!(unique.len(), all.len(), "并发下出现了重复 sid");
+        assert_eq!(unique.len(), all.len(), "duplicate SID");
     }
 }

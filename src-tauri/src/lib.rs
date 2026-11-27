@@ -1,9 +1,6 @@
 use crate::file::{chose_dir, traverse_dir_cmd};
-use crate::network::cmd::{is_open, set_open, start_server, stop_server};
-use crate::network::discovery::cmd::{
-    is_lan_sniffing, list_lan_servers, start_lan_announce, start_lan_sniff, stop_lan_announce,
-    stop_lan_sniff,
-};
+use crate::network::cmd::*;
+use crate::network::discovery::cmd::*;
 use crate::window::{confirm_save_done, wait_saving};
 
 mod file;
@@ -20,17 +17,19 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            use tauri_plugin_log::{Builder, RotationStrategy, Target, TargetKind};
             if cfg!(debug_assertions) {
                 app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
+                    Builder::default()
                         .level(log::LevelFilter::Info)
+                        .clear_targets()
+                        .target(Target::new(TargetKind::Stdout))
                         .build(),
                 )?;
             } else {
-                use tauri_plugin_log::{Builder, RotationStrategy, Target, TargetKind};
-
                 let log = Builder::new()
                     .level(log::LevelFilter::Warn)
+                    .clear_targets()
                     .target(Target::new(TargetKind::LogDir {
                         file_name: Some("nova-flight".into()),
                     }))

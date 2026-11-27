@@ -1,8 +1,9 @@
-use crate::network::infrastructure::session::{Session, Tx};
+use crate::network::infrastructure::session::{PendingSession, Session, Tx};
 use ahash::AHashSet;
 use dashmap::iter::{Iter, IterMut};
 use dashmap::mapref::one::RefMut;
 use dashmap::{DashMap, Entry};
+use log::debug;
 use rand::RngCore;
 use std::net::IpAddr;
 use std::sync::Arc;
@@ -13,21 +14,40 @@ use tokio::sync::oneshot::{Receiver, Sender, channel};
 pub(crate) struct PendingClient {
     tx: Tx,
     permit: Option<Sender<()>>,
+    active: Option<Sender<u8>>,
     close: Option<Sender<()>>,
 }
 
 impl PendingClient {
-    pub fn new(tx: Tx, permit: Sender<()>, close: Sender<()>) -> Self {
-        PendingClient {
+    pub fn create(tx: Tx, token: u32) -> (PendingClient, PendingSession) {
+        let (p_tx, p_rx) = channel::<()>();
+        let (a_tx, a_rx) = channel::<u8>();
+        let (c_tx, c_rx) = channel::<()>();
+
+        let client = PendingClient {
             tx,
-            permit: Some(permit),
-            close: Some(close),
-        }
+            permit: Some(p_tx),
+            active: Some(a_tx),
+            close: Some(c_tx),
+        };
+        let session = PendingSession {
+            token,
+            permit: p_rx,
+            active: a_rx,
+            close: c_rx,
+        };
+        (client, session)
     }
 
     fn permit(&mut self) {
         if let Some(tx) = self.permit.take() {
             let _ = tx.send(());
+        }
+    }
+
+    fn active(&mut self, sid: u8) {
+        if let Some(tx) = self.active.take() {
+            let _ = tx.send(sid);
         }
     }
 
@@ -37,16 +57,16 @@ impl PendingClient {
         }
     }
 
-    fn upgrade(self, sid: u8) -> Result<ActiveClient, &'static str> {
-        if self.permit.is_some() {
-            return Err("must permit at first");
-        }
+    fn upgrade(self, sid: u8) -> Option<ActiveClient> {
+        assert!(self.permit.is_none(), "upgrade before permit");
+        assert!(self.active.is_none(), "upgrade before active ack");
+
         if self.close.is_none() {
-            return Err("channel closed");
+            return None;
         }
 
         let session = Session::new(self.tx, sid);
-        Ok(ActiveClient {
+        Some(ActiveClient {
             session,
             close: self.close,
         })
@@ -158,17 +178,25 @@ impl RelayState {
         }
     }
 
+    /// get `PendingClient` and send active.
+    pub fn active(&self, sid: u8, token: u32) {
+        if let Some(mut entry) = self.pending.get_mut(&token) {
+            entry.active(sid);
+        }
+    }
+
     /// remove `PendingClient` then promote to `ActiveClient`.
-    pub fn upgrade(&self, sid: u8, token: u32) -> Result<Arc<Session>, &'static str> {
+    pub fn upgrade(&self, sid: u8, token: u32) -> Option<Arc<Session>> {
         let Some(entry) = self.pending.remove(&token) else {
-            return Err("no pending client with token");
+            debug!("no pending client with token, relay may shutting down");
+            return None;
         };
 
         let pending = entry.1;
         let client = pending.upgrade(sid)?;
         let session = client.session.clone();
         self.active.insert(sid, client);
-        Ok(session)
+        Some(session)
     }
 
     /// iter all clients and close them

@@ -25,6 +25,7 @@ export class RelayCodeMap {
         add(0x09, 'network.unban');
         add(0x10, 'network.did_not_ban');
         add(0x11, 'network.invalid_ipv4');
+        add(0x12, 'network.invalid_token');
         add(0xFF, 'network.unknown_action');
     }
 }

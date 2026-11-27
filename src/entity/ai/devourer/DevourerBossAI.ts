@@ -1,14 +1,13 @@
 import type {NbtCompound} from "../../../nbt/element/NbtCompound.ts";
-import {MutVec2} from "../../../utils/math/MutVec2.ts";
-import {Vec2} from "../../../utils/math/Vec2.ts";
+import type {Supplier} from "../../../type/types.ts";
+import type {ProjectileEntity} from "../../projectile/ProjectileEntity.ts";
 import type {EntityAi} from "../EntityAi.ts";
 import type {DevourerBoss} from "../../mob/DevourerBoss.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import {randInt} from "../../../utils/math/math.ts";
+import {MutVec2} from "../../../utils/math/MutVec2.ts";
+import {Vec2} from "../../../utils/math/Vec2.ts";
 import {DevourerAttack} from "./DevourerAttack.ts";
-import type {Supplier} from "../../../type/types.ts";
-import type {ProjectileEntity} from "../../projectile/ProjectileEntity.ts";
-
 
 export class DevourerBossAI implements EntityAi {
     private readonly entity: DevourerBoss;
@@ -42,21 +41,22 @@ export class DevourerBossAI implements EntityAi {
     }
 
     private tickMovement(): void {
+        const entity = this.entity;
         const intent = this.computeIntent(
-            this.entity.positionRef,
-            this.entity.target()?.positionRef ?? null,
-            this.entity.getPhase(),
-            this.entity.age,
-            this.entity.getMovementSpeed()
+            entity.positionRef,
+            entity.target()?.positionRef ?? null,
+            entity.getPhase(),
+            entity.age,
+            entity.getMovementSpeed()
         );
 
         if (intent.speed > 0.001) {
-            this.entity.setClampYaw(intent.targetYaw, this.entity.turnRate);
+            entity.setClampYaw(intent.targetYaw, entity.turnRate);
         }
 
-        const yaw = this.entity.getYaw();
-        this.entity.setVelocity(Math.cos(yaw) * intent.speed, Math.sin(yaw) * intent.speed);
-        this.entity.needSync = true;
+        const yaw = entity.getYaw();
+        entity.setVelocity(Math.cos(yaw) * intent.speed, Math.sin(yaw) * intent.speed);
+        entity.needSync = true;
     }
 
     private tickAttacks(world: ServerWorld): void {

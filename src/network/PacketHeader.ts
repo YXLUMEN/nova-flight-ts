@@ -14,7 +14,8 @@ export const enum ServerAction {
     KICK = 0x00,
     PERMIT = 0x01,
     REJECT = 0x02,
-    QUERY = 0x03,
-    BAN_IP = 0x04,
-    UNBAN_IP = 0x05,
+    ACTIVE_ACK = 0x03,
+    QUERY = 0x04,
+    BAN_IP = 0x05,
+    UNBAN_IP = 0x06,
 }

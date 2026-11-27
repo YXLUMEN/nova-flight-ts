@@ -30,15 +30,11 @@ pub fn wait_saving(window: &Window, event: &WindowEvent) {
     match *started {
         None => {
             *started = Some(Instant::now());
-            drop(started);
             api.prevent_close();
             let _ = window.emit("save_before_close", ());
         }
-        Some(t) if t.elapsed() >= SAVE_GRACE_PERIOD => {
-            drop(started);
-        }
+        Some(t) if t.elapsed() >= SAVE_GRACE_PERIOD => {}
         Some(_) => {
-            drop(started);
             api.prevent_close();
             let _ = window.emit("save_before_close", ());
         }

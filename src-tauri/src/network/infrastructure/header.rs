@@ -15,9 +15,10 @@ pub(crate) const SERVER_ACTION: u8 = 0xFF;
 pub(crate) const KICK: u8 = 0x00;
 pub(crate) const PERMIT: u8 = 0x01;
 pub(crate) const REJECT: u8 = 0x02;
-pub(crate) const QUERY: u8 = 0x03;
-pub(crate) const BAN_IP: u8 = 0x04;
-pub(crate) const UNBAN_IP: u8 = 0x05;
+pub(crate) const ACTIVE_ACK: u8 = 0x03;
+pub(crate) const QUERY: u8 = 0x04;
+pub(crate) const BAN_IP: u8 = 0x05;
+pub(crate) const UNBAN_IP: u8 = 0x06;
 
 /// 中继回执,用于可翻译文本
 pub(crate) const DUPLICATE_SERVER: u8 = 0x00;

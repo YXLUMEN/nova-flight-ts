@@ -20,7 +20,7 @@ export class ServerRelayHandler implements PacketListener {
 
     public constructor(manager: ServerNetworkManager) {
         this.manager = manager;
-        this.codec = RelayProtocols.SERVER.codec;
+        this.codec = RelayProtocols.RELAY.codec;
     }
 
     public onMessage(reader: BinaryReader) {
@@ -40,7 +40,7 @@ export class ServerRelayHandler implements PacketListener {
     }
 
     public onClientActive(packet: ClientActive) {
-        this.manager.active(packet.sid, new SocketAddr(packet.host, packet.port));
+        this.manager.active(packet.sid, packet.token, new SocketAddr(packet.host, packet.port));
     }
 
     public onRelayMessage(packet: RelayMessage) {

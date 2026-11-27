@@ -1,6 +1,6 @@
 import {PacketHeader, ServerAction} from "../../network/PacketHeader.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import {encodeIpv4} from "../../utils/net_util.ts";
+import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 
 export class RelayActionBuilder {
     public static forceDisconnect(sid: number) {
@@ -27,6 +27,15 @@ export class RelayActionBuilder {
         return writer.toUint8Array();
     }
 
+    public static active_ack(sid: number, token: number) {
+        const writer = new BinaryWriter(7);
+        writer.writeInt8(PacketHeader.SERVER_ACTION);
+        writer.writeInt8(ServerAction.ACTIVE_ACK);
+        writer.writeInt8(sid);
+        writer.writeUint32(token);
+        return writer.toUint8Array();
+    }
+
     public static queryClients() {
         const buf = new Uint8Array(2);
         buf[0] = PacketHeader.SERVER_ACTION;
@@ -38,7 +47,7 @@ export class RelayActionBuilder {
         const writer = new BinaryWriter(6);
         writer.writeInt8(PacketHeader.SERVER_ACTION);
         writer.writeInt8(ServerAction.BAN_IP);
-        writer.writeUint32(encodeIpv4(ip));
+        PacketCodecs.IPV4.encode(writer, ip);
         return writer.toUint8Array();
     }
 
@@ -46,7 +55,7 @@ export class RelayActionBuilder {
         const writer = new BinaryWriter(6);
         writer.writeInt8(PacketHeader.SERVER_ACTION);
         writer.writeInt8(ServerAction.UNBAN_IP);
-        writer.writeUint32(encodeIpv4(ip));
+        PacketCodecs.IPV4.encode(writer, ip);
         return writer.toUint8Array();
     }
 }

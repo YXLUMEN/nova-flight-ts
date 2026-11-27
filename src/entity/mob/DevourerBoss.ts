@@ -24,6 +24,7 @@ import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPosit
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
+import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
 
 export class DevourerBoss extends BossEntity {
     private static readonly PHASE_TRACKER = DataTracker.registerData(Object(DevourerBoss),
@@ -93,7 +94,11 @@ export class DevourerBoss extends BossEntity {
     private tickTargetSelection(): void {
         if (this.selectCooldown-- > 0) return;
 
-        this.primaryTarget = getNearestEntityByVec(this.positionRef, this.getWorld().getPlayers());
+        this.primaryTarget = getNearestEntityByVec(
+            this.positionRef,
+            this.getWorld().getPlayers(),
+            EntityPredicates.CAN_DAMAGE
+        );
         this.selectCooldown = this.primaryTarget ? 40 : 15;
     }
 

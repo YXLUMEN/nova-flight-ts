@@ -120,9 +120,10 @@ export class ServerNetworkManager implements SessionDispatcher {
         this.bus.action(RelayActionBuilder.permit(token));
     }
 
-    public active(sid: number, socket: SocketAddr) {
+    public active(sid: number, token: number, socket: SocketAddr) {
         this.expired(sid);
         this.bindAddress.set(sid, socket);
+        this.bus.action(RelayActionBuilder.active_ack(sid, token));
     }
 
     public detach(sid: number): void {

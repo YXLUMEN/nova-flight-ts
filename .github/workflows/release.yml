@@ -35,8 +35,64 @@ env:
   UPDATE_URL_TEMPLATE: ${{ vars.UPDATE_URL_TEMPLATE || 'https://arctic-red-tide.xyz/app/nova-flight/{name}' }}
 
 jobs:
+  # 闸门: 测试不通过就不进 prepare, 避免先打 tag 再发现代码是坏的
+  test:
+    name: 发布前测试
+    runs-on: ubuntu-22.04
+    # 最小权限: 这一步会执行第三方安装脚本(npm ci)与构建脚本
+    permissions:
+      contents: read
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: 准备 Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: 准备 Rust
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable 分支(2026-09-03)
+        with:
+          toolchain: '1.99.1'
+
+      - name: 缓存 Rust 构建产物
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          key: release-test
+
+      - name: 安装 Linux 系统依赖
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            xdg-utils \
+            libfuse2 \
+            file
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 前端单元测试
+        run: npm test
+
+      # tauri-build 会读取 tauri.conf.json 中的 frontendDist(../dist), 先产出前端
+      - name: 构建前端
+        run: npm run build
+
+      - name: Rust 单元测试
+        run: cargo test --locked --lib --manifest-path src-tauri/Cargo.toml
+
   prepare:
     name: 解析版本号与更新说明
+    needs: test
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.meta.outputs.version }}

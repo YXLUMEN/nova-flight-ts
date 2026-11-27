@@ -82,15 +82,11 @@ pub fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
         == 0
 }
 
-pub fn parse_ipv4(data: &[u8]) -> Option<Ipv4Addr> {
-    if data.len() < 4 {
+pub fn read_ipv4(data: &[u8]) -> Option<Ipv4Addr> {
+    if data.len() != 4 {
         return None;
     }
-
-    let bytes: [u8; 4] = data[..4].try_into().ok()?;
-
-    let ip_num = u32::from_le_bytes(bytes);
-    let ip = Ipv4Addr::from(ip_num);
-
-    Some(ip)
+    let bytes = <[u8; 4]>::try_from(data).ok()?;
+    let ip_num = u32::from_be_bytes(bytes);
+    Some(Ipv4Addr::from(ip_num))
 }
