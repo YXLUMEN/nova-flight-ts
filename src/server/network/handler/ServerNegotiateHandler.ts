@@ -6,7 +6,7 @@ import type {LoginC2SPacket} from "../../../network/packet/negotiate/LoginC2SPac
 import {wrapKey} from "../../../network/crypto/GCMHelper.ts";
 import {GCMScope} from "../../../network/crypto/GCMScope.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
-import {ConnectionState} from "../ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 import {ECDHKeyAgreement} from "../../../network/crypto/ECDHKeyAgreement.ts";
 import {PubKeyS2CPacket} from "../../../network/packet/negotiate/PubKeyS2CPacket.ts";
 import {GameProfile} from "../../entity/GameProfile.ts";

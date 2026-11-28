@@ -10,7 +10,7 @@ import {unwrapKey} from "../../../network/crypto/GCMHelper.ts";
 import {GCMDecryptImpl} from "../../../network/crypto/GCMDecrypt.ts";
 import {GCMScope} from "../../../network/crypto/GCMScope.ts";
 import {ClientCommonHandler} from "./ClientCommonHandler.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 import {ECDHKeyAgreement} from "../../../network/crypto/ECDHKeyAgreement.ts";
 import {PubKeyC2SPacket} from "../../../network/packet/negotiate/PubKeyC2SPacket.ts";
 import {ClientFinishNegC2SPacket} from "../../../network/packet/negotiate/ClientFinishNegC2SPacket.ts";

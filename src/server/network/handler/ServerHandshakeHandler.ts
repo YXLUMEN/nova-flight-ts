@@ -8,7 +8,7 @@ import {ClientHandshakeC2SPacket} from "../../../network/packet/handshake/Client
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
 import {GameProfile} from "../../entity/GameProfile.ts";
 import {ServerReadyS2CPacket} from "../../../network/packet/handshake/ServerReadyS2CPacket.ts";
-import {ConnectionState} from "../ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 import {Log} from "../../../utils/Log.ts";
 import {ServerNegotiateHandler} from "./ServerNegotiateHandler.ts";
 import {NegotiateProtocols} from "../../../network/protocol/NegotiateProtocols.ts";

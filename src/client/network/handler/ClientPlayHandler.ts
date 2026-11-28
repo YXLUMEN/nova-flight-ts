@@ -55,7 +55,7 @@ import {Vec2} from "../../../utils/math/Vec2.ts";
 import {GameProfile} from "../../../server/entity/GameProfile.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {ClientWorld} from "../../ClientWorld.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 import {ClientCommonHandler} from "./ClientCommonHandler.ts";
 import {CommandDispatcher} from "../../../brigadier/CommandDispatcher.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";

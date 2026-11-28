@@ -4,7 +4,7 @@ import type {PayloadType} from "../PayloadType.ts";
 import type {Consumer} from "../../type/types.ts";
 import {NetworkSide} from "../NetworkSide.ts";
 import {ProtocolInfo} from "./ProtocolInfo.ts";
-import {ConnectionState} from "../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../ConnectionState.ts";
 import {IdDispatchCodec} from "../codec/IdDispatchCodec.ts";
 
 export class ProtocolInfoBuilder {

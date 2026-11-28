@@ -1,5 +1,5 @@
 import {ProtocolInfoBuilder} from "./ProtocolInfoBuilder.ts";
-import {ConnectionState} from "../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../ConnectionState.ts";
 import {ServerReadyS2CPacket} from "../packet/handshake/ServerReadyS2CPacket.ts";
 import {ClientProfileC2SPacket} from "../packet/handshake/ClientProfileC2SPacket.ts";
 import {ClientHandshakeC2SPacket} from "../packet/handshake/ClientHandshakeC2SPacket.ts";

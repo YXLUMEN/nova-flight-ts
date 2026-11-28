@@ -2,7 +2,7 @@ import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
 import type {Payload} from "../../../network/Payload.ts";
 import type {ServerFinishConfigS2CPacket} from "../../../network/packet/config/ServerFinishConfigS2CPacket.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 import {ClientCommonHandler} from "./ClientCommonHandler.ts";
 import {PlayProtocol} from "../../../network/protocol/PlayProtocol.ts";
 import {ClientStartPlayC2SPacket} from "../../../network/packet/config/ClientStartPlayC2SPacket.ts";

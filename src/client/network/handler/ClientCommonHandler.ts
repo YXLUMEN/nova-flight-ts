@@ -2,7 +2,7 @@ import type {PacketListener} from "../../../network/PacketListener.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
 import type {Payload} from "../../../network/Payload.ts";
-import type {ConnectionState} from "../../../server/network/ConnectionState.ts";
+import type {ConnectionState} from "../../../network/ConnectionState.ts";
 import type {RelayMessage} from "../../../network/packet/relay/RelayMessage.ts";
 import type {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import type {BatchBuffer} from "../../../network/packet/common/BatchBuffer.ts";

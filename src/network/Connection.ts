@@ -5,7 +5,7 @@ import type {Payload} from "./Payload.ts";
 import type {ProtocolInfo} from "./protocol/ProtocolInfo.ts";
 import type {ChannelHandler} from "./channel/ChannelHandler.ts";
 import {NetworkSide} from "./NetworkSide.ts";
-import {ConnectionState} from "../server/network/ConnectionState.ts";
+import {ConnectionState} from "./ConnectionState.ts";
 import {FakeChannel} from "./channel/FakeChannel.ts";
 
 export abstract class Connection implements ChannelHandler {

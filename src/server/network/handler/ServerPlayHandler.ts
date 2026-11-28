@@ -26,7 +26,7 @@ import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {PlayerResetTechC2SPacket} from "../../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {GameMessageS2CPacket} from "../../../network/packet/s2c/GameMessageS2CPacket.ts";
-import {ConnectionState} from "../ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 import {BlockChangeC2SPacket} from "../../../network/packet/c2s/BlockChangeC2SPacket.ts";
 import {BlockChangeS2CPacket} from "../../../network/packet/s2c/BlockChangeS2CPacket.ts";
 import {World} from "../../../world/World.ts";
@@ -93,7 +93,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
 
     public onPlayerFinishLogin(_: PlayerFinishLoginC2SPacket) {
         const uuid: UUID = this.profile().clientId;
-        if (!this.server.playerManager.isPlayerExists(uuid)) {
+        if (!this.server.playerManager.hasPlayer(uuid)) {
             return;
         }
 

@@ -7,7 +7,7 @@ import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {PacketCodec} from "../../../network/codec/PacketCodec.ts";
 import type {RelayPayload} from "../../../network/RelayPayload.ts";
 import type {ClientActive} from "../../../network/packet/relay/ClientActive.ts";
-import {ConnectionState} from "../ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 import {RelayCodeMap} from "../../../network/RelayCodeMap.ts";
 import {NetworkSide} from "../../../network/NetworkSide.ts";
 import {RelayProtocols} from "../../../network/protocol/RelayProtocols.ts";

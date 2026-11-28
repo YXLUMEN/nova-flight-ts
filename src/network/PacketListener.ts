@@ -1,5 +1,5 @@
 import type {Payload} from "./Payload.ts";
-import type {ConnectionState} from "../server/network/ConnectionState.ts";
+import type {ConnectionState} from "./ConnectionState.ts";
 import type {NetworkSide} from "./NetworkSide.ts";
 
 export interface PacketListener {

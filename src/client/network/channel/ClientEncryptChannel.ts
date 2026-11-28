@@ -9,7 +9,7 @@ import {PacketHeader} from "../../../network/PacketHeader.ts";
 import {Log} from "../../../utils/Log.ts";
 import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {ClientChannel} from "./ClientChannel.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 
 export class ClientEncryptChannel extends ClientChannel {
     private readonly session: GCMSession;

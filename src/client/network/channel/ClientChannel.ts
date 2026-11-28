@@ -7,7 +7,7 @@ import type {ClientBus} from "../bus/ClientBus.ts";
 import {HandshakeProtocols} from "../../../network/protocol/HandshakeProtocols.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {PacketHeader} from "../../../network/PacketHeader.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 
 export class ClientChannel implements Channel {
     protected readonly bus: ClientBus;

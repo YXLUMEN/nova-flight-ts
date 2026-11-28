@@ -117,6 +117,9 @@ export class PlayerManager {
         if (exist === player) {
             this.uuidToPlayer.delete(uuid);
             this.sessionToPlayer.delete(player.profile().sessionId);
+            if (this.uuidToPlayer.size === 1) {
+                this.server.isMultiPlayer = false;
+            }
         }
 
         this.server.networkBus.broadcast(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
@@ -142,7 +145,7 @@ export class PlayerManager {
     }
 
     public hasLogin(uuid: UUID): boolean {
-        return this.isPlayerExists(uuid) || this.pendingLogin.has(uuid);
+        return this.hasPlayer(uuid) || this.pendingLogin.has(uuid);
     }
 
     public addLogin(uuid: UUID) {
@@ -150,7 +153,7 @@ export class PlayerManager {
         return () => this.pendingLogin.delete(uuid);
     }
 
-    public isPlayerExists(uuid: UUID): boolean {
+    public hasPlayer(uuid: UUID): boolean {
         return this.uuidToPlayer.has(uuid);
     }
 

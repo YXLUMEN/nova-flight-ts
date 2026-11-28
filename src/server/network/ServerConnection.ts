@@ -4,7 +4,7 @@ import type {SocketAddr} from "../../network/SocketAddr.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {ConnectionHealth} from "./ConnectionHealth.ts";
 import {NetworkSide} from "../../network/NetworkSide.ts";
-import {ConnectionState} from "./ConnectionState.ts";
+import {ConnectionState} from "../../network/ConnectionState.ts";
 import {Connection} from "../../network/Connection.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";

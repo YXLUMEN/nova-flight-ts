@@ -17,6 +17,7 @@ import {TechCommand} from "../../command/cmd/TechCommand.ts";
 import {BanCommand} from "../../command/cmd/BanCommand.ts";
 import {UnbanCommand} from "../../command/cmd/UnbanCommand.ts";
 import {LoginCommand} from "../../command/cmd/LoginCommand.ts";
+import {PlayerCommand} from "../../command/cmd/PlayerCommand.ts";
 
 export class ServerCommandManager extends CommandManager {
     public readonly source: ServerCommandSource;
@@ -49,5 +50,6 @@ export class ServerCommandManager extends CommandManager {
         BanCommand.registry(this.dispatcher);
         UnbanCommand.registry(this.dispatcher);
         LoginCommand.registry(this.dispatcher);
+        PlayerCommand.registry(this.dispatcher);
     }
 }

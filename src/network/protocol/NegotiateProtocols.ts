@@ -1,5 +1,5 @@
 import {ProtocolInfoBuilder} from "./ProtocolInfoBuilder.ts";
-import {ConnectionState} from "../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../ConnectionState.ts";
 import {PubKeyS2CPacket} from "../packet/negotiate/PubKeyS2CPacket.ts";
 import {GroupKeyS2CPacket} from "../packet/negotiate/GroupKeyS2CPacket.ts";
 import {PlayerDisconnectS2CPacket} from "../packet/s2c/PlayerDisconnectS2CPacket.ts";

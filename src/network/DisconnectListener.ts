@@ -1,6 +1,6 @@
 import type {NetworkSide} from "./NetworkSide.ts";
 import type {PacketListener} from "./PacketListener.ts";
-import {ConnectionState} from "../server/network/ConnectionState.ts";
+import {ConnectionState} from "./ConnectionState.ts";
 
 export class DisconnectListener implements PacketListener {
     private readonly side_: NetworkSide;

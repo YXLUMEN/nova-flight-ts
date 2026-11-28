@@ -1,4 +1,4 @@
-import type {ConnectionState} from "../../server/network/ConnectionState.ts";
+import type {ConnectionState} from "../ConnectionState.ts";
 import type {NetworkSide} from "../NetworkSide.ts";
 import type {Comparable} from "../../type/Comparable.ts";
 import type {PacketCodec} from "../codec/PacketCodec.ts";

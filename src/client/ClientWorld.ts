@@ -34,7 +34,6 @@ export class ClientWorld extends World {
     private readonly players = new Set<PlayerEntity>();
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ClientEntityManager<Entity>;
-    private isMultiPlayer = false;
 
     private phaseScore = 0;
 
@@ -212,10 +211,6 @@ export class ClientWorld extends World {
         return this.phaseScore;
     }
 
-    public tickWhenMultiPlayer() {
-        return this.isMultiPlayer && !this.over;
-    }
-
     public isTechTreeHidden() {
         return document.getElementById('tech-shell')!.classList.contains('hidden');
     }
@@ -232,7 +227,6 @@ export class ClientWorld extends World {
         startTicking: (entity: Entity) => {
             if (entity instanceof PlayerEntity) {
                 this.players.add(entity);
-                if (this.players.size > 1) this.isMultiPlayer = true;
                 return;
             }
             this.entities.add(entity);

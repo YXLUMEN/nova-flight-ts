@@ -1,5 +1,5 @@
 import {ProtocolInfoBuilder} from "./ProtocolInfoBuilder.ts";
-import {ConnectionState} from "../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../ConnectionState.ts";
 import {PongS2CPacket} from "../packet/s2c/PongS2CPacket.ts";
 import {BatchBlockChangesPacket} from "../packet/common/BatchBlockChangesPacket.ts";
 import {BatchBufferPacket} from "../packet/common/BatchBufferPacket.ts";

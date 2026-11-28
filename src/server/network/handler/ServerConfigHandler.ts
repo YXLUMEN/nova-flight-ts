@@ -3,7 +3,7 @@ import type {ServerConnection} from "../ServerConnection.ts";
 import type {ClientStartPlayC2SPacket} from "../../../network/packet/config/ClientStartPlayC2SPacket.ts";
 import {GameProfile} from "../../entity/GameProfile.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
-import {ConnectionState} from "../ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 import {PendingSpawn} from "./PendingSpawn.ts";
 import {TimeoutError} from "../../../type/errors.ts";
 import {ServerFinishConfigS2CPacket} from "../../../network/packet/config/ServerFinishConfigS2CPacket.ts";

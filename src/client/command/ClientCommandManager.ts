@@ -37,6 +37,7 @@ import {TechCommand} from "../../command/cmd/TechCommand.ts";
 import {BanCommand} from "../../command/cmd/BanCommand.ts";
 import {UnbanCommand} from "../../command/cmd/UnbanCommand.ts";
 import {LoginCommand} from "../../command/cmd/LoginCommand.ts";
+import {PlayerCommand} from "../../command/cmd/PlayerCommand.ts";
 
 export class ClientCommandManager extends CommandManager implements EventListenerObject {
     private static readonly COMMAND_HISTORY_ID = 'history';
@@ -382,6 +383,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
         BanCommand.registry(this.dispatcher);
         UnbanCommand.registry(this.dispatcher);
         LoginCommand.registry(this.dispatcher);
+        PlayerCommand.registry(this.dispatcher);
     }
 
     public override executeWithPrefix(source: CommandSource, input: string): void {

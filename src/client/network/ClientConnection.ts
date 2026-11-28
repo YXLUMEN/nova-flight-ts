@@ -3,7 +3,7 @@ import type {Payload} from "../../network/Payload.ts";
 import {Connection} from "../../network/Connection.ts";
 import {NetworkSide} from "../../network/NetworkSide.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
-import {ConnectionState} from "../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../../network/ConnectionState.ts";
 import {Log} from "../../utils/Log.ts";
 import {PacketIndexRange} from "../../type/errors.ts";
 

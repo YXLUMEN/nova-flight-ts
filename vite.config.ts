@@ -27,6 +27,9 @@ export default defineConfig({
         terserOptions: {
             ecma: 2025,
             compress: {
+                ecma: 2025,
+                builtins_ecma: 2025,
+                builtins_pure: true,
                 drop_console: true,
                 drop_debugger: true,
                 passes: 2,

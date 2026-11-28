@@ -7,7 +7,7 @@ import type {ServerAllowNegotiateS2CPacket} from "../../../network/packet/handsh
 import {ClientCommonHandler} from "./ClientCommonHandler.ts";
 import {ClientHandshakeC2SPacket} from "../../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
 import {ClientProfileC2SPacket} from "../../../network/packet/handshake/ClientProfileC2SPacket.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
+import {ConnectionState} from "../../../network/ConnectionState.ts";
 import {HandshakeProtocols} from "../../../network/protocol/HandshakeProtocols.ts";
 import {ClientStartNegotiateC2SPacket} from "../../../network/packet/handshake/ClientStartNegotiateC2SPacket.ts";
 import {ClientNegotiateHandler} from "./ClientNegotiateHandler.ts";
