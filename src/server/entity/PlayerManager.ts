@@ -19,6 +19,7 @@ import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {PromisePool} from "../../utils/collection/PromisePool.ts";
 import {PlayProtocol} from "../../network/protocol/PlayProtocol.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
+import {ServerProperties} from "../ServerProperties.ts";
 
 export class PlayerManager {
     private readonly server: NovaFlightServer;
@@ -155,6 +156,10 @@ export class PlayerManager {
 
     public playerCounts() {
         return this.uuidToPlayer.size;
+    }
+
+    public isFull() {
+        return this.uuidToPlayer.size >= ServerProperties.MAX_PLAYERS.get();
     }
 
     public iterPlayers() {

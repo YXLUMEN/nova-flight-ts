@@ -1,9 +1,8 @@
 import type {Payload} from "../../Payload.ts";
-import type {ServerConfigHandler} from "../../../server/network/handler/ServerConfigHandler.ts";
+import type {ServerNegotiateHandler} from "../../../server/network/handler/ServerNegotiateHandler.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class LoginC2SPacket implements Payload {
     public static readonly ID: PayloadType<LoginC2SPacket> = payloadType('login');
@@ -28,7 +27,7 @@ export class LoginC2SPacket implements Payload {
         return LoginC2SPacket.ID;
     }
 
-    public accept(listener: ServerConfigHandler): void {
+    public accept(listener: ServerNegotiateHandler): void {
         void listener.onClientLogin(this);
     }
 
@@ -36,7 +35,7 @@ export class LoginC2SPacket implements Payload {
         return 0;
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.CONFIGURATION;
+    public inTransition(): boolean {
+        return true;
     }
 }

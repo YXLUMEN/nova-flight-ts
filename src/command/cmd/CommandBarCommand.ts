@@ -11,19 +11,19 @@ export class CommandBarCommand {
                 .then(
                     literal<T>('clear')
                         .executes(ctx => {
-                            ctx.source.getClient().clientCommandManager.clearAllMessages();
+                            ctx.source.client.clientCommandManager.clearAllMessages();
                         })
                 )
                 .then(
                     literal<T>('clear_history')
                         .executes(ctx => {
-                            ctx.source.getClient().clientCommandManager.clearHistory();
+                            ctx.source.client.clientCommandManager.clearHistory();
                         })
                 )
                 .then(
                     literal<T>('dump')
                         .executes(async ctx => {
-                            const result = await ctx.source.getClient().clientCommandManager.dumpHistory();
+                            const result = await ctx.source.client.clientCommandManager.dumpHistory();
                             if (result.isErr()) {
                                 ctx.source.addMessage(`\x1b[31mFail to get history: ${result.unwrapErr()}`);
                                 return;

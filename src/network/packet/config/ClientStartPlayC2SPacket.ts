@@ -3,7 +3,6 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {ServerConfigHandler} from "../../../server/network/handler/ServerConfigHandler.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientStartPlayC2SPacket implements Payload {
     public static readonly INSTANCE = new ClientStartPlayC2SPacket();
@@ -25,7 +24,7 @@ export class ClientStartPlayC2SPacket implements Payload {
         return 0;
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.CONFIGURATION;
+    public inTransition(): boolean {
+        return true;
     }
 }

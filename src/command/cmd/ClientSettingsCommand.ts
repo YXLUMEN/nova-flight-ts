@@ -3,6 +3,7 @@ import type {ClientCommandSource} from "../../client/command/ClientCommandSource
 import {stopServer} from "../../client/ipc/integrated_server.ts";
 import {argument, literal} from "../../brigadier/builder/CommandNodeBuilder.ts";
 import {validateIpv4} from "../../utils/address_util.ts";
+import {uuidFromString} from "../../utils/uuid_util.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {IllegalArgumentError} from "../../type/errors.ts";
 import {IntArgumentType} from "../argument/IntArgumentType.ts";
@@ -77,6 +78,13 @@ export class ClientSettingsCommand {
                                             if (playerName.length > 64) {
                                                 throw new IllegalArgumentError('\x1b[31mPlayer name cannot longer then 64 char');
                                             }
+                                            if (__TEST_MULTIPLAYER__) {
+                                                uuidFromString(playerName).then(uuid => {
+                                                    (ctx.source.client.clientId as any) = uuid;
+                                                    (ctx.source.client.playerName as any) = playerName;
+                                                });
+                                                return;
+                                            }
 
                                             localStorage.setItem('playerName', playerName);
                                             ctx.source.addMessage(`Set playerName to: \x1b[32m"${playerName}"`);
@@ -147,7 +155,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('stop_game')
                                 .executes(ctx => {
-                                    ctx.source.getClient().requireStop();
+                                    ctx.source.client.requireStop();
                                     ctx.source.addMessage('Schedule to stop the game');
                                 })
                         )

@@ -37,7 +37,8 @@ export default defineConfig({
     plugins: [
         injectPlugin({
             defines: {
-                __IS_SERVER__: false
+                __IS_SERVER__: false,
+                __TEST_MULTIPLAYER__: false,
             }
         }),
         InlineEnum()

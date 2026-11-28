@@ -37,7 +37,7 @@ export class ParticleCommand {
         if (!particleType) throw new CommandError(`Particle type ${particleId} is not registered`);
 
         const count = ctx.args.get('count')?.result;
-        const pos = ctx.source.getClient().input.getWorldPointer();
+        const pos = ctx.source.client.input.getWorldPointer();
         world.addParticleVec(particleType, pos, count ?? 1);
     }
 }

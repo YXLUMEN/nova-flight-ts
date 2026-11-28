@@ -3,7 +3,6 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {ClientNegotiateHandler} from "../../../client/network/handler/ClientNegotiateHandler.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ServerAllowConfigS2CPacket implements Payload {
     public static readonly INSTANCE = new ServerAllowConfigS2CPacket();
@@ -25,7 +24,7 @@ export class ServerAllowConfigS2CPacket implements Payload {
         return 0;
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.NEGOTIATION;
+    public inTransition(): boolean {
+        return true;
     }
 }

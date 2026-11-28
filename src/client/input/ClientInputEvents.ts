@@ -148,6 +148,7 @@ export class ClientInputEvents {
         }).catch(console.error);
 
         app.listen('tauri://blur', () => {
+            if (__TEST_MULTIPLAYER__) return;
             if (!client.clientCommandManager.isShow()) {
                 client.setPause(true);
             }

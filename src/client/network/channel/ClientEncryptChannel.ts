@@ -12,16 +12,23 @@ import {ClientChannel} from "./ClientChannel.ts";
 import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientEncryptChannel extends ClientChannel {
-    private readonly group: GCMDecrypt;
     private readonly session: GCMSession;
+    private group: GCMDecrypt = null!;
 
     private recvTail = Promise.resolve();
     private sendTail = Promise.resolve();
 
-    public constructor(bus: ClientBus, group: GCMDecrypt, session: GCMSession) {
+    public constructor(bus: ClientBus, session: GCMSession) {
         super(bus);
-        this.group = group;
         this.session = session;
+    }
+
+    public setGroupKey(group: GCMDecrypt) {
+        this.group = group;
+    }
+
+    public available() {
+        return !this.session.exhausted() && this.group != null;
     }
 
     public override send(payload: Payload) {
@@ -44,6 +51,7 @@ export class ClientEncryptChannel extends ClientChannel {
                 return;
             case PacketHeader.SERVER_BROADCAST:
                 reader.skip(1);
+                // group may not init, and PLAY stage's message also meaningless now.
                 if (this.in.protocol !== ConnectionState.PLAY) return;
                 this.decrypt(reader, this.group);
                 return;

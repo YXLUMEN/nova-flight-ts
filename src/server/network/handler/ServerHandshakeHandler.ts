@@ -9,7 +9,6 @@ import {ServerCommonHandler} from "./ServerCommonHandler.ts";
 import {GameProfile} from "../../entity/GameProfile.ts";
 import {ServerReadyS2CPacket} from "../../../network/packet/handshake/ServerReadyS2CPacket.ts";
 import {ConnectionState} from "../ConnectionState.ts";
-import {ServerProperties} from "../../ServerProperties.ts";
 import {Log} from "../../../utils/Log.ts";
 import {ServerNegotiateHandler} from "./ServerNegotiateHandler.ts";
 import {NegotiateProtocols} from "../../../network/protocol/NegotiateProtocols.ts";
@@ -41,7 +40,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
 
     public onClientHandshake(packet: ClientHandshakeC2SPacket) {
         // 在这里处理满员,因为后续要加入认证,协议面处理不了
-        if (this.server.playerManager.playerCounts() >= ServerProperties.MAX_PLAYERS.get()) {
+        if (this.server.playerManager.isFull()) {
             this.disconnect(ServerHandshakeHandler.PLAYER_FULL);
             return;
         }

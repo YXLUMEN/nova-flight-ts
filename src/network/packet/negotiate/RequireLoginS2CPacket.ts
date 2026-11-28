@@ -1,9 +1,8 @@
 import type {Payload} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
-import type {ClientConfigHandler} from "../../../client/network/handler/ClientConfigHandler.ts";
+import type {ClientNegotiateHandler} from "../../../client/network/handler/ClientNegotiateHandler.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class RequireLoginS2CPacket implements Payload {
     public static readonly INSTANCE = new RequireLoginS2CPacket();
@@ -17,7 +16,7 @@ export class RequireLoginS2CPacket implements Payload {
         return RequireLoginS2CPacket.ID;
     }
 
-    public accept(listener: ClientConfigHandler): void {
+    public accept(listener: ClientNegotiateHandler): void {
         void listener.onRequireLogin(this);
     }
 
@@ -25,7 +24,7 @@ export class RequireLoginS2CPacket implements Payload {
         return 0;
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.CONFIGURATION;
+    public inTransition(): boolean {
+        return true;
     }
 }

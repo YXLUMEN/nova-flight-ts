@@ -22,7 +22,7 @@ export class SoundCommand {
                                 throw new CommandError(`\x1b[33mSound was not found with ID: "${arg.result}"`);
                             }
 
-                            ctx.source.getClient().globalSound.playSound(event);
+                            ctx.source.client.globalSound.playSound(event);
                             ctx.source.addMessage(`Start to play \x1b[32m"${event.id}"\x1b[0m`);
                         })
                         .suggests(CommandUtil.createIdentifierSuggestion(Registries.SOUND_EVENT))

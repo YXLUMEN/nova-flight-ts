@@ -114,7 +114,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
                 this.commandInput.value = '';
 
                 if (!input.startsWith('/')) {
-                    this.source.getClient().clientChat.sendMessage(input);
+                    this.source.client.clientChat.sendMessage(input);
                     return;
                 }
 
@@ -395,7 +395,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
         const context = contextBuilder.build(command);
         const lastNode = context.nodes.at(-1);
         if (lastNode) {
-            this.source.getClient().networkHandler.sendCommand(command);
+            this.source.client.networkHandler.sendCommand(command);
             return;
         }
 

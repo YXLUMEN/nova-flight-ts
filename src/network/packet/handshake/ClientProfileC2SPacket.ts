@@ -4,7 +4,6 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {ServerHandshakeHandler} from "../../../server/network/handler/ServerHandshakeHandler.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientProfileC2SPacket implements Payload {
     public static readonly ID: PayloadType<ClientProfileC2SPacket> = payloadType('player_attempt_login');
@@ -41,8 +40,8 @@ export class ClientProfileC2SPacket implements Payload {
         listener.onClientProfile?.(this);
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.HANDSHAKING;
+    public inTransition(): boolean {
+        return true;
     }
 
     public estimateSize(): number {

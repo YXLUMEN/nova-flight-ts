@@ -4,7 +4,6 @@ import type {ClientNegotiateHandler} from "../../../client/network/handler/Clien
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {GCM_NONCE_BYTES} from "../../crypto/GCMHelper.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class GroupKeyS2CPacket implements Payload {
     public static readonly ID: PayloadType<GroupKeyS2CPacket> = payloadType('group_key');
@@ -41,7 +40,7 @@ export class GroupKeyS2CPacket implements Payload {
         return 3 + this.wrappered.length + this.iv.length;
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.NEGOTIATION;
+    public inTransition(): boolean {
+        return true;
     }
 }

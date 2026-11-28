@@ -3,7 +3,6 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {ServerHandshakeHandler} from "../../../server/network/handler/ServerHandshakeHandler.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientStartNegotiateC2SPacket implements Payload {
     public static readonly INSTANCE = new ClientStartNegotiateC2SPacket();
@@ -25,7 +24,7 @@ export class ClientStartNegotiateC2SPacket implements Payload {
         return 0;
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.HANDSHAKING;
+    public inTransition(): boolean {
+        return true;
     }
 }

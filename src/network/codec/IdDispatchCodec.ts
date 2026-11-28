@@ -25,7 +25,7 @@ export class IdDispatchCodec<V, T> implements PacketCodec<V>, Comparable {
         const id = reader.readVarUint();
         const entry = this.byId[id];
         if (entry === undefined) {
-            throw makeTraceLimitError(DecoderError, 2, `Received unknown packet id "${id}"`);
+            throw makeTraceLimitError(DecoderError, 3, `Received unknown packet id "${id}"`);
         }
 
         return entry.codec.decode(reader);
@@ -35,7 +35,7 @@ export class IdDispatchCodec<V, T> implements PacketCodec<V>, Comparable {
         const type = this.getter(value);
         const id = this.toId.get(type);
         if (id === undefined) {
-            throw makeTraceLimitError(EncoderError, 2, `Sending unknown packet:\n "${type}"`, {cause: type});
+            throw makeTraceLimitError(EncoderError, 3, `Sending unknown packet:\n "${type}"`, {cause: type});
         }
 
         writer.writeVarUint(id);

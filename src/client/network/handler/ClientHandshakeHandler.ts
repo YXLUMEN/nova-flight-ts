@@ -81,7 +81,7 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
     }
 
     public override accept(payload: Payload) {
-        if (payload.protocol?.() !== this.getPhase()) return;
+        if (!payload.inTransition?.()) return;
         super.accept(payload);
     }
 

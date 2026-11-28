@@ -2,7 +2,6 @@ import type {Payload} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 import type {ServerNegotiateHandler} from "../../../server/network/handler/ServerNegotiateHandler.ts";
 
 export class PubKeyC2SPacket implements Payload {
@@ -36,7 +35,7 @@ export class PubKeyC2SPacket implements Payload {
         return 2 + this.pubKey.length;
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.NEGOTIATION;
+    public inTransition(): boolean {
+        return true;
     }
 }

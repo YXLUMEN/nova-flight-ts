@@ -3,7 +3,6 @@ import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ClientConfigHandler} from "../../../client/network/handler/ClientConfigHandler.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ServerFinishConfigS2CPacket implements Payload {
     public static readonly INSTANCE = new ServerFinishConfigS2CPacket();
@@ -25,7 +24,7 @@ export class ServerFinishConfigS2CPacket implements Payload {
         return 0;
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.CONFIGURATION;
+    public inTransition(): boolean {
+        return true;
     }
 }

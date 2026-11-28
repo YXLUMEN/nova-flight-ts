@@ -3,7 +3,7 @@ import {CommandSource} from "../../command/CommandSource.ts";
 import type {World} from "../../world/World.ts";
 
 export class ClientCommandSource extends CommandSource {
-    private readonly client: NovaFlightClient;
+    public readonly client: NovaFlightClient;
 
     public constructor(client: NovaFlightClient) {
         super();
@@ -16,10 +16,6 @@ export class ClientCommandSource extends CommandSource {
 
     public getWorld(): World | null {
         return this.client.world;
-    }
-
-    public getClient() {
-        return this.client;
     }
 
     public addMessage(message: string): void {

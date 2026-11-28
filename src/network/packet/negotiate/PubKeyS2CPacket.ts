@@ -3,7 +3,6 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {ClientNegotiateHandler} from "../../../client/network/handler/ClientNegotiateHandler.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class PubKeyS2CPacket implements Payload {
     public static readonly SALT_LEN = 16;
@@ -42,7 +41,7 @@ export class PubKeyS2CPacket implements Payload {
         return 1 + this.pubKey.length + PubKeyS2CPacket.SALT_LEN;
     }
 
-    public protocol(): ConnectionState {
-        return ConnectionState.NEGOTIATION;
+    public inTransition(): boolean {
+        return true;
     }
 }
